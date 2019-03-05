@@ -1,0 +1,92 @@
+[DEFAULT]
+ignoreip   = 127.0.0.1/8
+bantime    = 31536000
+findtime   = 86400
+maxretry   = 1
+backend    = auto
+banaction  = iptables-multiport
+protocol   = tcp
+chain      = INPUT
+usedns     = warn
+
+destemail  = postmaster@matthews-co.xyz
+mta        = mail
+sendername = Fail2Ban
+sender     = fail2ban@matthews-co.xyz
+
+action_    = %(banaction)s[name=%(__name__)s, port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+
+action_mw  = %(banaction)s[name=%(__name__)s, port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+              %(mta)s-whois[name=%(__name__)s, dest="%(destemail)s", protocol="%(protocol)s", chain="%(chain)s", sendername="%(sendername)s"]
+
+action_mwl = %(banaction)s[name=%(__name__)s, port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+               %(mta)s-whois-lines[name=%(__name__)s, dest="%(destemail)s", logpath=%(logpath)s, chain="%(chain)s", sendername="%(sendername)s"]
+
+action     = %(action_mwl)s
+
+# JAILS
+[sshd]
+port      = ssh
+logpath   = /var/log/auth.log
+enabled   = true
+
+[sshd-ddos]
+port      = ssh
+logpath   = /var/log/auth.log
+enabled   = true
+
+[nginx-http-auth]
+port      = http,https
+logpath   = /var/log/nginx/*error.log
+enabled   = true
+
+[nginx-botsearch]
+port      = http,https
+logpath   = /var/log/nginx/*error.log
+maxretry  = 2
+enabled   = true
+
+[php-url-fopen]
+port      = http,https
+logpath   = /var/log/nginx/*access.log
+enabled   = true
+
+[proftpd]
+port      = ftp,ftp-data,ftps,ftps-data
+logpath   = /var/log/proftpd/*.log
+enabled   = true
+maxretry  = 5
+[postfix]
+port      = smtp,465,submission
+logpath   = /var/log/mail.info
+enabled   = true
+
+[postfix-rbl]
+port      = smtp,465,submission
+logpath   = /var/log/mail.info
+maxretry  = 1
+enabled   = true
+
+[dovecot]
+port      = pop3,pop3s,imap,imaps,submission,465,sieve
+logpath   = /var/log/mail.info
+enabled   = true
+
+[sieve]
+port      = smtp,465,submission
+logpath   = /var/log/mail.info
+enabled   = true
+
+[postfix-sasl]
+port      = smtp,465,submission,imap3,imaps,pop3,pop3s
+logpath   = /var/log/mail.info
+enabled   = true
+
+[mysqld-auth]
+port      = 3306
+logpath   = /var/log/mysql/*
+enabled   = true
+
+[pam-generic]
+logpath   = /var/log/auth.log
+enabled   = true

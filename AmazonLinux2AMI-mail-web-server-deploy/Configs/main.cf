@@ -1,0 +1,95 @@
+myhostname             = $DOMAIN
+mydomain               = $DOMAIN
+myorigin               = $DOMAIN
+mydestination          = $myhostname, localhost.$mydomain, localhost, $mydomain
+mynetworks             = 127.0.0.0/8
+mynetworks_style       = host
+append_dot_mydomain    = yes
+
+inet_interfaces        = all
+inet_protocols         = all
+
+unknown_local_recipient_reject_code = 550
+alias_maps             = hash:/etc/aliases
+alias_database         = hash:/etc/aliases
+mime_header_checks     = regexp:/etc/postfix/header_checks
+header_checks          = regexp:/etc/postfix/header_checks
+
+home_mailbox           = Maildir/
+mailbox_transport      = lmtp:unix:private/dovecot-lmtp
+mailbox_size_limit     = 5242880000
+message_size_limit     = 524288000
+recipient_delimiter    = +
+header_checks          = regexp:/etc/postfix/header_checks
+smtpd_banner           = $myhostname ESMTP $mail_name
+
+sendmail_path          = /usr/sbin/sendmail.postfix
+newaliases_path        = /usr/bin/newaliases.postfix
+mailq_path             = /usr/bin/mailq.postfix
+
+manpage_directory      = /usr/share/man
+sample_directory       = /usr/share/doc/postfix-2.10.1/samples
+readme_directory       = /usr/share/doc/postfix-2.10.1/README_FILES
+queue_directory        = /var/spool/postfix
+command_directory      = /usr/sbin
+daemon_directory       = /usr/libexec/postfix
+data_directory         = /var/lib/postfix
+mail_owner             = postfix
+setgid_group           = postdrop
+default_privs          = nobody
+html_directory         = no
+biff                   = no
+readme_directory       = no
+
+smtpd_tls_cert_file    = /etc/letsencrypt/live/$DOMAIN/cert.pem
+smtpd_tls_key_file     = /etc/letsencrypt/live/$DOMAIN/privkey.pem
+smtpd_tls_CAfile       = /etc/letsencrypt/live/$DOMAIN/chain.pem
+
+smtpd_use_tls          = yes
+smtpd_tls_protocols    = !SSLv2, !SSLv3
+smtpd_sasl_type        = dovecot
+smtpd_sasl_path        = private/auth
+smtpd_sasl_auth_enable = yes
+smtpd_tls_auth_only    = yes
+smtpd_tls_session_cache_database    = btree:${data_directory}/smtpd_scache
+smtp_tls_session_cache_database     = btree:${data_directory}/smtp_scache
+smtpd_tls_security_level            = may
+smtpd_tls_exclude_ciphers           = aNULL, eNULL, EXPORT, DES, RC4, MD5, PSK, aECDH, EDH-DSS-DES-CBC3-SHA, EDH-RSA-DES-CBC3-SHA, KRB5-DES, CBC3-SHA
+smtpd_tls_dh1024_param_file         = /etc/ssl/dhparams.pem
+
+content_filter         = scan:[127.0.0.1]:10025
+policy-spf_time_limit  = 3600s
+milter_default_action  = accept
+milter_protocol        = 6
+
+smtpd_client_restrictions =
+    permit_mynetworks,
+    reject_unauth_pipelining,
+smtpd_helo_required = yes
+smtpd_helo_restrictions =
+    permit_mynetworks,
+    permit_sasl_authenticated,
+    reject_invalid_helo_hostname,
+    reject_non_fqdn_helo_hostname,
+    check_helo_access hash:/etc/postfix/helo_access,
+smtpd_sender_restrictions =
+    permit_mynetworks,
+    reject_non_fqdn_sender,
+    reject_unknown_sender_domain,
+    check_sender_access hash:/etc/postfix/sender_access,
+smtpd_relay_restrictions =
+    permit_mynetworks,
+    permit_sasl_authenticated,
+    reject_unauth_destination,
+smtpd_recipient_restrictions =
+    reject_non_fqdn_recipient,
+    reject_unknown_recipient_domain,
+    permit_mynetworks,
+    permit_sasl_authenticated,
+    reject_rbl_client zen.spamhaus.org,
+    reject_rhsbl_reverse_client dbl.spamhaus.org,
+    reject_rhsbl_helo dbl.spamhaus.org,
+    reject_rhsbl_sender dbl.spamhaus.org,
+    check_policy_service unix:postgrey/socket,
+    check_policy_service unix:private/policy-spf,
+    permit
