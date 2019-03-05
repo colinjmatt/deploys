@@ -10,7 +10,7 @@ USERS="user1 user2 user3 user4 user5"
 NGINX=$(amazon-linux-extras list | grep nginx | awk -F ' ' '{print $2}')
 amazon-linux-extras install "$NGINX" -y
 
-cd /tmp
+cd /tmp || exit
 curl -O http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 yum install epel-release-latest-7.noarch.rpm -y
 yum install     certbot \
@@ -113,8 +113,8 @@ echo "OPTIONS="--unix=/var/spool/postfix/postgrey --delay=60"" >/etc/sysconfig/p
 cat ./Configs/opendkim.conf >/etc/opendkim.conf
 cat ./Configs/opendmarc.conf >/etc/opendmarc.conf
 cat ./Configs/TrustedHosts >/etc/opendkim/TrustedHosts
-echo "mail._domainkey."$DOMAIN" "$DOMAIN":mail:/etc/opendkim/keys/"$DOMAIN"/mail.private" >/etc/opendkim/KeyTable
-echo "*@"$DOMAIN" mail._domainkey."$DOMAIN"" >/etc/opendkim/SigningTable
+echo "mail._domainkey.$DOMAIN $DOMAIN:mail:/etc/opendkim/keys/$DOMAIN/mail.private" >/etc/opendkim/KeyTable
+echo "*@$DOMAIN mail._domainkey.$DOMAIN" >/etc/opendkim/SigningTable
 mkdir -p /etc/opendkim/keys/$DOMAIN
 opendkim-genkey -D /etc/opendkim/keys/$DOMAIN/ -s mail -d $DOMAIN
 chown -R opendkim:opendkim /etc/opendkim/keys/
@@ -188,10 +188,13 @@ sed -i -e "s/\$DOMAIN/""$DOMAIN""/g"    /etc/motd \
                                         /etc/fail2ban/fail2ban.conf \
                                         /etc/nginx/sites/*.conf
 
+# TODO
+# rainloop webmail server
+
 # Create users & passwords
 for NAME in $USERS ; do
-  useradd -m $NAME
-  passwd $NAME
+  useradd -m "$NAME"
+  passwd "$NAME"
 done
 
 # Enable and start EVERYTHING
