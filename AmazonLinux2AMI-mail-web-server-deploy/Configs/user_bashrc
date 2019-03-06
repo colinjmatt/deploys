@@ -14,5 +14,4 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
-export PATH="/usr/lib/ccache/bin/:\$PATH"
 export EDITOR=nano
