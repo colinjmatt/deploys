@@ -1,92 +1,130 @@
+[INCLUDES]
+before = paths-fedora.conf
+
 [DEFAULT]
-ignoreip   = 127.0.0.1/8
-bantime    = 31536000
-findtime   = 86400
-maxretry   = 1
-backend    = auto
-banaction  = iptables-multiport
-protocol   = tcp
-chain      = INPUT
-usedns     = warn
+backend            = auto
+banaction          = iptables-multiport
+banaction_allports = iptables-allports
+bantime            = 31536000
+chain              = INPUT
+destemail          = postmaster@$DOMAIN
+enabled            = false
+fail2ban_agent     = Fail2Ban/%(fail2ban_version)s
+filter             = %(__name__)s
+findtime           = 86400
+ignoreip           = 127.0.0.1/8
+ignorecommand      =
+logencoding        = auto
+maxretry           = 1
+mta                = mail
+port               = 0:65535
+protocol           = tcp
+sender             = fail2ban@$DOMAIN
+sendername         = Fail2Ban
+usedns             = yes
 
-destemail  = postmaster@$DOMAIN
-mta        = mail
-sendername = Fail2Ban
-sender     = fail2ban@$DOMAIN
 
-action_    = %(banaction)s[name=%(__name__)s, port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+action_              = %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
 
-action_mw  = %(banaction)s[name=%(__name__)s, port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
-              %(mta)s-whois[name=%(__name__)s, dest="%(destemail)s", protocol="%(protocol)s", chain="%(chain)s", sendername="%(sendername)s"]
+action_mw            = %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+                       %(mta)s-whois[name=%(__name__)s, sender="%(sender)s", dest="%(destemail)s", protocol="%(protocol)s", chain="%(chain)s"]
 
-action_mwl = %(banaction)s[name=%(__name__)s, port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
-               %(mta)s-whois-lines[name=%(__name__)s, dest="%(destemail)s", logpath=%(logpath)s, chain="%(chain)s", sendername="%(sendername)s"]
+action_mwl           = %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+                       %(mta)s-whois-lines[name=%(__name__)s, sender="%(sender)s", dest="%(destemail)s", logpath=%(logpath)s, chain="%(chain)s"]
 
-action     = %(action_mwl)s
+action_xarf          = %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+                       xarf-login-attack[service=%(__name__)s, sender="%(sender)s", logpath=%(logpath)s, port="%(port)s"]
 
+action_cf_mwl        = cloudflare[cfuser="%(cfemail)s", cftoken="%(cfapikey)s"]
+                       %(mta)s-whois-lines[name=%(__name__)s, sender="%(sender)s", dest="%(destemail)s", logpath=%(logpath)s, chain="%(chain)s"]
+
+action_blocklist_de  = blocklist_de[email="%(sender)s", service=%(filter)s, apikey="%(blocklist_de_apikey)s", agent="%(fail2ban_agent)s"]
+
+action_badips        = badips.py[category="%(__name__)s", banaction="%(banaction)s", agent="%(fail2ban_agent)s"]
+
+action_badips_report = badips[category="%(__name__)s", agent="%(fail2ban_agent)s"]
+
+action = %(action_)s
+
+#
 # JAILS
+#
+# SSH
 [sshd]
-port      = ssh
-logpath   = /var/log/auth.log
-enabled   = true
+filter   = sshd-aggressive
+port     = ssh
+logpath  = %(sshd_log)s
+backend  = %(sshd_backend)s
+enabled  = true
 
 [sshd-ddos]
-port      = ssh
-logpath   = /var/log/auth.log
-enabled   = true
+port     = ssh
+logpath  = %(sshd_log)s
+backend  = %(sshd_backend)s
+enabled  = true
 
+[selinux-ssh]
+port     = ssh
+logpath  = %(auditd_log)s
+enabled  = true
+
+# HTTP
 [nginx-http-auth]
-port      = http,https
-logpath   = /var/log/nginx/*error.log
-enabled   = true
+port     = http,https
+logpath  = %(nginx_error_log)s
+enabled  = true
+
+[nginx-limit-req]
+port     = http,https
+logpath  = %(nginx_error_log)s
+enabled  = true
 
 [nginx-botsearch]
-port      = http,https
-logpath   = /var/log/nginx/*error.log
-maxretry  = 2
-enabled   = true
+port     = http,https
+logpath  = %(nginx_error_log)s
+maxretry = 1
+enabled  = true
 
 [php-url-fopen]
-port      = http,https
-logpath   = /var/log/nginx/*access.log
-enabled   = true
+port     = http,https
+logpath  = %(nginx_access_log)s
+enabled  = true
 
-[proftpd]
-port      = ftp,ftp-data,ftps,ftps-data
-logpath   = /var/log/proftpd/*.log
-enabled   = true
-maxretry  = 5
+# Mail servers
 [postfix]
-port      = smtp,465,submission
-logpath   = /var/log/mail.info
-enabled   = true
+port     = smtp,465,submission
+logpath  = %(postfix_log)s
+backend  = %(postfix_backend)s
+enabled  = true
 
 [postfix-rbl]
-port      = smtp,465,submission
-logpath   = /var/log/mail.info
-maxretry  = 1
-enabled   = true
+port     = smtp,465,submission
+logpath  = %(postfix_log)s
+backend  = %(postfix_backend)s
+maxretry = 1
+enabled  = true
 
 [dovecot]
-port      = pop3,pop3s,imap,imaps,submission,465,sieve
-logpath   = /var/log/mail.info
-enabled   = true
+port     = pop3,pop3s,imap,imaps,submission,465,sieve
+logpath  = %(dovecot_log)s
+backend  = %(dovecot_backend)s
+enabled  = true
 
 [sieve]
-port      = smtp,465,submission
-logpath   = /var/log/mail.info
-enabled   = true
+port     = smtp,465,submission
+logpath  = %(dovecot_log)s
+backend  = %(dovecot_backend)s
+enabled  = true
 
 [postfix-sasl]
-port      = smtp,465,submission,imap3,imaps,pop3,pop3s
-logpath   = /var/log/mail.info
-enabled   = true
+port     = smtp,465,submission,imap3,imaps,pop3,pop3s
+logpath  = %(postfix_log)s
+backend  = %(postfix_backend)s
+enabled  = true
 
-[mysqld-auth]
-port      = 3306
-logpath   = /var/log/mysql/*
-enabled   = true
-
+# Miscellaneous
 [pam-generic]
-logpath   = /var/log/auth.log
-enabled   = true
+banaction = %(banaction_allports)s
+logpath  = %(syslog_authpriv)s
+backend  = %(syslog_backend)s
+enabled  = true
