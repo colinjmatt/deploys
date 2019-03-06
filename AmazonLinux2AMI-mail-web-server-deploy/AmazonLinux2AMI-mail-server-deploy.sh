@@ -1,18 +1,18 @@
 #!/bin/bash
-#AWS Mail Server Setup on Amazon Linux 2
+# AWS Mail Server Setup on Amazon Linux 2
 
 HOSTNAME=example-server
 DOMAIN=example.com
-SUBDOMAINS="sub1 sub2 sub3"
+SUBDOMAINS="sub1 sub2 sub3" # Leave this blank if no subdomains are required
+WEBMAILSUB="sub1" # Choose one of the above subdomains that will handle webmail. leave blank if a subdomain isn't being used for the rainloop frontend
 USERS="user1 user2 user3 user4 user5"
 
-#Install packages
+# Install packages
 NGINX=$(amazon-linux-extras list | grep nginx | awk -F ' ' '{print $2}')
 amazon-linux-extras install "$NGINX" -y
 
-cd /tmp || exit
-curl -O http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-yum install epel-release-latest-7.noarch.rpm -y
+curl http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -o /tmp/epel-release-latest-7.noarch.rpm
+yum install /tmp/epel-release-latest-7.noarch.rpm -y
 yum install     certbot \
                 cifs-utils \
                 clamav clamsmtp \
@@ -67,6 +67,11 @@ cat ./Configs/motd >/etc/motd
 cat ./Configs/dnsmasq.conf >/etc/dnsmasq.conf
 echo "supersede domain-name-servers 127.0.0.1;" >>/etc/dhcp/dhclient.conf
 echo "DNS1=127.0.0.1" >>/etc/sysconfig/network-scripts/ifcfg-eth0
+
+# configure php-fpm
+sed -i -e "s/listen\ =.*/listen\ =\ \/var\/run\/php-fpm\/php-fpm.sock/g" /etc/php-fpm.d/www.conf
+sed -i -e "s/user\ =.*/user\ =\ nginx/g" /etc/php-fpm.d/www.conf
+sed -i -e "s/group\ =.*/group\ =\ nginx/g" /etc/php-fpm.d/www.conf
 
 # Configure clamsmtp
 cat ./Configs/clamsmtpd.conf >/etc/clamsmtpd.conf
@@ -152,7 +157,7 @@ sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/*.conf
 mkdir -p /var/www/html/.well-known
 systemctl enable nginx --now
 certbot certonly --register-unsafely-without-email --webroot -w /var/www/html/ -d $DOMAIN
-cat ./Configs/index.nginx.html >/var/www/html/index.nginx.html
+cat ./Configs/index.html >/var/www/html/index.html
 
 if [ -z "$SUBDOMAINS" ]; then
     :
@@ -160,7 +165,7 @@ else
     for SUB in $SUBDOMAINS ; do
       mkdir -p /var/www/"$SUB"/.well-known
       certbot certonly --register-unsafely-without-email --webroot -w /var/www/"$SUB"/ -d "$SUB"."$DOMAIN"
-      cat ./Configs/index.nginx.html >/var/www/"$SUB"/index.nginx.html
+      cat ./Configs/index.html >/var/www/"$SUB"/index.html
     done
 fi
 
@@ -188,8 +193,18 @@ sed -i -e "s/\$DOMAIN/""$DOMAIN""/g"    /etc/motd \
                                         /etc/fail2ban/fail2ban.conf \
                                         /etc/nginx/sites/*.conf
 
-# TODO
 # rainloop webmail server
+curl https://www.rainloop.net/repository/webmail/rainloop-latest.zip -o /tmp/rainloop-latest.zip
+if [ -z "$WEBMAILSUB" ]; then
+    WEBMAILSUB="html"
+else
+    :
+fi
+unzip -q /tmp/rainloop-latest.zip -d /var/www/$WEBMAILSUB
+find /var/www/$WEBMAILSUB/. -type d -exec chmod 755 {} \;
+find /var/www/$WEBMAILSUB/. -type f -exec chmod 644 {} \;
+chown -R nginx:nginx /var/www/$WEBMAILSUB
+sed -i -e "s/index.html/index.php/g" /etc/nginx/sites/$WEBMAILSUB.$DOMAIN
 
 # Create users & passwords
 for NAME in $USERS ; do
@@ -208,4 +223,5 @@ systemctl enable opendkim --now
 systemctl enable postgrey --now
 systemctl enable postfix --now
 systemctl enable offsitemount --now
+systemctl enable php-fpm --now
 systemctl restart nginx
