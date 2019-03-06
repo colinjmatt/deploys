@@ -36,7 +36,7 @@ cd ~ || exit
 git clone https://github.com/solidnerd/docker-bookstack.git
 
 # Edit /home/ec2-user/docker-bookstack/docker-compose.yml to use latest tag
-sed -i -e "s/.*image\:\ solidnerd\/bookstack\:.*/\ \ \ \ image\: solidnerd\/bookstack\:latest/g" docker-compose.yml
+sed -i -e "s/image\:\ solidnerd\/bookstack\:.*/image\: solidnerd\/bookstack\:latest/g" docker-compose.yml
 
 # Create docker-bookstack service and enable it
 sudo cp ./Configs/docker-bookstack.service /etc/systemd/system/docker-bookstack.service
@@ -47,7 +47,7 @@ sudo mkdir -p /var/www/docker-bookstack/.well-known
 sudo mkdir -p /etc/nginx/sites
 sudo cp ./Configs/nginx.conf /etc/nginx/nginx.conf
 sudo cp ./Configs/docker-bookstack-pre-certbot.conf /etc/nginx/sites/docker-bookstack.conf
-sudo sed -i -e "s/\ \ \ \ server_name\ \ \ \"\$DOMAIN\";/\ \ \ \ server_name\ \ \ ""$DOMAIN"";/g" /etc/nginx/sites/docker-bookstack.conf
+sudo sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/docker-bookstack.conf
 
 # Start nginx
 sudo systemctl enable nginx --now
@@ -57,8 +57,5 @@ sudo certbot certonly --register-unsafely-without-email --webroot -w /var/www/do
 
 # Configure nginx for SSL with port 80 redirect and reload
 sudo cp ./Configs/docker-bookstack-post-certbot.conf /etc/nginx/sites/docker-bookstack.conf
-sed -i -e "s/\ \ \ \ server_name\ \ \ \"\$DOMAIN\";/\ \ \ \ server_name\ \ \ ""$DOMAIN"";/g" /etc/nginx/sites/docker-bookstack.conf
-sed -i -e "s/\ \ \ \ server_name\ \ \ \ \ \ \ \"\$DOMAIN\";/\ \ \ \ server_name\ \ \ \ \ \ \ ""$DOMAIN"";/g" /etc/nginx/sites/docker-bookstack.conf
-sed -i -e "s/ssl_certificate\ \/etc\/letsencrypt\/live\/\"\$DOMAIN\"\/fullchain.pem;/ssl_certificate\ \/etc\/letsencrypt\/live\/""$DOMAIN""\/fullchain.pem;/g" /etc/nginx/sites/docker-bookstack.conf
-sed -i -e "s/ssl_certificate_key\ \/etc\/letsencrypt\/live\/\"\$DOMAIN\"\/privkey.pem;/ssl_certificate_key\ \/etc\/letsencrypt\/live\/""$DOMAIN""\/privkey.pem;/g" /etc/nginx/sites/docker-bookstack.conf
+sudo sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/docker-bookstack.conf
 sudo systemctl reload nginx
