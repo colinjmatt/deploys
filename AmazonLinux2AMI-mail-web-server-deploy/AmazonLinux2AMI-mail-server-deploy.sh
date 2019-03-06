@@ -6,6 +6,8 @@ DOMAIN=example.com
 SUBDOMAINS="sub1 sub2 sub3" # Leave this blank if no subdomains are required
 WEBMAILSUB="sub1" # Choose one of the above subdomains that will handle webmail. leave blank if a subdomain isn't being used for the rainloop frontend
 USERS="user1 user2 user3 user4 user5"
+SSHUSERS="user1 user3" # List of the above users allowed to SSH to the server
+SUDOERS="user1 user4" # List of users to become sudoers
 
 # Install packages
 NGINX=$(amazon-linux-extras list | grep nginx | awk -F ' ' '{print $2}')
@@ -19,7 +21,7 @@ yum install     certbot \
                 dnsmasq \
                 dovecot dovecot-pigeonhole \
                 fail2ban \
-                mysql \
+                mariadb-server mysql \
                 opendkim opendmarc \
                 php php-curl php-fpm php-mcrypt php-xml \
                 postgrey \
@@ -52,11 +54,13 @@ newaliases
 
 # Configure SSH
 cat ./Configs/sshd_config >/etc/ssh/sshd_config
+sed -i -e "s/\$SSHUSERS/""$SSHUSERS""/g"
 systemctl reload sshd
 
 # Configure .bashrc
 cat ./Configs/root_bashrc >>/root/.bashrc
 cat ./Configs/user_bashrc >/etc/skel/.bashrc
+cat ./Configs/user_bashrc >/home/ec2-user/.bashrc
 
 # Make skel mail directories & insert sieve script
 mkdir -p /etc/skel/Maildir/{cur,new,tmp}
@@ -70,6 +74,7 @@ cat ./Configs/motd >/etc/motd
 cat ./Configs/dnsmasq.conf >/etc/dnsmasq.conf
 echo "supersede domain-name-servers 127.0.0.1;" >>/etc/dhcp/dhclient.conf
 echo "DNS1=127.0.0.1" >>/etc/sysconfig/network-scripts/ifcfg-eth0
+sed -i -e "s/nameserver.*/nameserver\ 127.0.0.1/g" /etc/resolv.conf
 
 # configure php-fpm
 sed -i -e "s/listen\ =.*/listen\ =\ \/var\/run\/php-fpm\/php-fpm.sock/g" /etc/php-fpm.d/www.conf
@@ -78,6 +83,7 @@ sed -i -e "s/group\ =.*/group\ =\ nginx/g" /etc/php-fpm.d/www.conf
 
 # Configure clamsmtp
 cat ./Configs/clamsmtpd.conf >/etc/clamsmtpd.conf
+freshclam
 
 # Configure dovecot
 cat ./Configs/dovecot.conf >/etc/dovecot/dovecot.conf
@@ -90,22 +96,16 @@ cat ./Configs/20-lmtp.conf >/etc/dovecot/conf.d/20-lmtp.conf
 cat ./Configs/90-sieve.conf >/etc/dovecot/conf.d/90-sieve.conf
 
 # Configure postfix
+cat ./Configs/postfix.service >/etc/systemd/system/postfix.service
+cat /Configs/postfix-chroot-cp.sh >/usr/local/bin/postfix-chroot-cp.sh
+chmod +x /usr/local/bin/postfix-chroot-cp.sh
 cat ./Configs/main.cf >/etc/postfix/main.cf
 cat ./Configs/master.cf >/etc/postfix/master.cf
 cat ./Configs/policyd-spf.conf >/etc/python-policyd-spf/policyd-spf.conf
 cat ./Configs/helo_access >/etc/postfix/helo_access
 cat ./Configs/header_checks >/etc/postfix/header_checks
 touch /etc/postfix/sender_access
-postmap /etc/postfix/sender_access
-postmap /etc/postfix/helo_access
-postmap /etc/postfix/header_checks
 alternatives --set mta /usr/sbin/sendmail.postfix
-
-mkdir -p /var/spool/postfix/etc/
-LIST="host.conf hosts localtime nsswitch.conf resolv.conf services"
-for FILE in $LIST ; do
-  cp /etc/"$FILE" /var/spool/postfix/etc/
-done
 
 # Configure spamassassin
 cat ./Configs/local.cf >/etc/mail/spamassassin/local.cf
@@ -129,34 +129,33 @@ chown -R opendkim:opendkim /etc/opendkim/keys/
 chmod 0650 /etc/opendkim
 chmod 0650 /etc/opendkim/TrustedHosts
 usermod -aG opendkim opendmarc
-
 mkdir -p /var/spool/postfix/{opendkim,opendmarc}/
 chown opendkim:root /var/spool/postfix/opendkim/
 chown opendmarc:root /var/spool/postfix/opendmarc/
 usermod -aG opendkim,opendmarc postfix
 
 # Configure fail2ban
-cat ./Configs/fail2ban.conf >/etc/fail2ban/fail2ban.conf
+cat ./Configs/fail2ban.local >/etc/fail2ban/fail2ban.local
 cat ./Configs/jail.local >/etc/fail2ban/jail.local
 
 # Configure nginx
 cat ./Configs/nginx.conf >/etc/nginx/nginx.conf
 mkdir -p /etc/nginx/sites
-cat ./Configs/nginx-pre.conf >/etc/nginx/sites/"$DOMAIN".conf
+cat ./Configs/nginx-pre.conf >/etc/nginx/sites/$DOMAIN.conf
+sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/"$DOMAIN".conf
 
 if [ -z "$SUBDOMAINS" ]; then
     :
 else
     for SUB in $SUBDOMAINS ; do
-      cat ./Configs/nginx-pre.conf >/etc/nginx/sites/"$SUB"."$DOMAIN".conf
-      sed -i -e "s/\$DOMAIN/""$SUB"".""$DOMAIN""/g" /etc/nginx/sites/"$DOMAIN".conf
-      sed -i -e "s/html/""$SUB""/g" /etc/nginx/sites/"$DOMAIN".conf
-    done
+        cat ./Configs/nginx-pre.conf >/etc/nginx/sites/"$SUB"."$DOMAIN".conf
+        sed -i -e "s/\$DOMAIN/""$SUB"".""$DOMAIN""/g" /etc/nginx/sites/"$SUB"."$DOMAIN".conf
+        sed -i -e "s/html/""$SUB""/g" /etc/nginx/sites/"$SUB"."$DOMAIN".conf
+    done;
 fi
 
-sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/*.conf
-
 # Install certbot certs
+sed -i -e "s/nameserver.*/nameserver\ 208.67.220.220/g" /etc/resolv.conf
 mkdir -p /var/www/html/.well-known
 systemctl enable nginx --now
 certbot certonly --register-unsafely-without-email --webroot -w /var/www/html/ -d $DOMAIN
@@ -166,23 +165,24 @@ if [ -z "$SUBDOMAINS" ]; then
     :
 else
     for SUB in $SUBDOMAINS ; do
-      mkdir -p /var/www/"$SUB"/.well-known
-      certbot certonly --register-unsafely-without-email --webroot -w /var/www/"$SUB"/ -d "$SUB"."$DOMAIN"
-      cat ./Configs/index.html >/var/www/"$SUB"/index.html
-    done
+        mkdir -p /var/www/"$SUB"/.well-known
+        certbot certonly --register-unsafely-without-email --webroot -w /var/www/"$SUB"/ -d "$SUB"."$DOMAIN"
+        cat ./Configs/index.html >/var/www/"$SUB"/index.html
+    done;
 fi
 
 # Complete nginx setup
 cat ./Configs/nginx-post.conf >/etc/nginx/sites/$DOMAIN.conf
+sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/"$DOMAIN".conf
 
 if [ -z "$SUBDOMAINS" ]; then
     :
 else
     for SUB in $SUBDOMAINS ; do
-      cat ./Configs/nginx-pre.conf >/etc/nginx/sites/"$SUB"."$DOMAIN".conf
-      sed -i -e "s/$DOMAIN/""$SUB"".""$DOMAIN""/g" /etc/nginx/sites/"$DOMAIN".conf
-      sed -i -e "s/html/""$SUB""/g" /etc/nginx/sites/"$DOMAIN".conf
-    done
+        cat ./Configs/nginx-post.conf >/etc/nginx/sites/"$SUB"."$DOMAIN".conf
+        sed -i -e "s/\$DOMAIN/""$SUB"".""$DOMAIN""/g" /etc/nginx/sites/"$SUB"."$DOMAIN".conf
+        sed -i -e "s/html/""$SUB""/g" /etc/nginx/sites/"$SUB"."$DOMAIN".conf
+    done;
 fi
 
 # Populate all configs with $DOMAIN
@@ -193,8 +193,12 @@ sed -i -e "s/\$DOMAIN/""$DOMAIN""/g"    /etc/motd \
                                         /etc/postfix/helo_access \
                                         /etc/opendkim/TrustedHosts \
                                         /etc/opendmarc.conf \
-                                        /etc/fail2ban/fail2ban.conf \
-                                        /etc/nginx/sites/*.conf
+                                        /etc/fail2ban/jail.local
+
+# Map access and checks for postfix
+postmap /etc/postfix/sender_access
+postmap /etc/postfix/helo_access
+postmap /etc/postfix/header_checks
 
 # rainloop webmail server
 curl https://www.rainloop.net/repository/webmail/rainloop-latest.zip -o /tmp/rainloop-latest.zip
@@ -207,24 +211,46 @@ unzip -q /tmp/rainloop-latest.zip -d /var/www/$WEBMAILSUB
 find /var/www/$WEBMAILSUB/. -type d -exec chmod 755 {} \;
 find /var/www/$WEBMAILSUB/. -type f -exec chmod 644 {} \;
 chown -R nginx:nginx /var/www/$WEBMAILSUB
-sed -i -e "s/index.html/index.php/g" /etc/nginx/sites/$WEBMAILSUB.$DOMAIN
+sed -i -e "s/index.html/index.php/g" /etc/nginx/sites/"$WEBMAILSUB"."$DOMAIN".conf
 
 # Create users & passwords
 for NAME in $USERS ; do
-  useradd -m "$NAME"
-  passwd "$NAME"
+    useradd -m "$NAME"
+    echo "Password for $NAME"
+    passwd "$NAME"
 done
 
-# Enable and start EVERYTHING
-systemctl enable dnsmasq --now
-systemctl enable clamsmtpd --now
-systemctl enable dovecot --now
-systemctl enable spamassassin --now
-systemctl enable fail2ban --now
-systemctl enable opendmarc --now
-systemctl enable opendkim --now
-systemctl enable postgrey --now
-systemctl enable postfix --now
-systemctl enable offsitemount --now
-systemctl enable php-fpm --now
-systemctl restart nginx
+# Add sudoers with password required
+for NAME in $SUDOERS ; do
+    echo "$NAME ALL=(ALL) ALL" >/etc/sudoers.d/"$NAME"
+done
+
+# Open necessary ports for Firewalld
+PORTS="22 25 80 143 443 465 993"
+for PORT in $PORTS; do
+    firewall-cmd --zone=public --add-port="$PORT"/tcp
+done
+
+# Enable EVERYTHING
+systemctl enable clamsmtpd
+systemctl enable clamsmtp-clamd
+systemctl enable dovecot
+systemctl enable dnsmasq
+systemctl enable fail2ban
+systemctl enable mariadb
+systemctl enable opendmarc
+systemctl enable opendkim
+systemctl enable postfix
+systemctl enable postgrey
+systemctl enable php-fpm
+systemctl enable spamassassin
+
+rm -rf /tmp/*
+
+printf "Setup complete.\n"
+printf "\033[0;31m\x1b[5m**REBOOT THE EC2 INSTANCE FROM THE AWS CONSOLE\!**\x1b[25m\n"
+
+# TODO
+# certbot renew cron job
+# freshclam cron job
+# mysql-server config
