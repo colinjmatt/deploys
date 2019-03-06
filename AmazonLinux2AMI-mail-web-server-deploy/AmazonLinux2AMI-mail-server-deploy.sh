@@ -21,7 +21,7 @@ yum install     certbot \
                 fail2ban \
                 mysql \
                 opendkim opendmarc \
-                php php-curl php-fpm php-mcrypt php-mysql php-xml \
+                php php-curl php-fpm php-mcrypt php-xml \
                 postgrey \
                 spamassassin \
                 pypolicyd-spf \
@@ -35,6 +35,9 @@ mkswap /mnt/swapfile
 swapon /mnt/swapfile
 echo "/mnt/swapfile swap swap defaults 0 0" >> /etc/fstab
 swapon -a
+
+# Make /tmp temp filesystem
+echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0" >> /etc/fstab
 
 # Generate Diffie Hellman
 openssl dhparam -out /etc/ssl/dhparams.pem 4096
@@ -121,7 +124,7 @@ cat ./Configs/TrustedHosts >/etc/opendkim/TrustedHosts
 echo "mail._domainkey.$DOMAIN $DOMAIN:mail:/etc/opendkim/keys/$DOMAIN/mail.private" >/etc/opendkim/KeyTable
 echo "*@$DOMAIN mail._domainkey.$DOMAIN" >/etc/opendkim/SigningTable
 mkdir -p /etc/opendkim/keys/$DOMAIN
-opendkim-genkey -D /etc/opendkim/keys/$DOMAIN/ -s mail -d $DOMAIN
+opendkim-genkey -D /etc/opendkim/keys/$DOMAIN/ -s mail -d $DOMAIN # mail.txt will need to be entered into your domain configuration
 chown -R opendkim:opendkim /etc/opendkim/keys/
 chmod 0650 /etc/opendkim
 chmod 0650 /etc/opendkim/TrustedHosts
