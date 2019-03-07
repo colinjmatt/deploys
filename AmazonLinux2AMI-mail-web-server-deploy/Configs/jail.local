@@ -2,6 +2,7 @@
 before = paths-fedora.conf
 
 [DEFAULT]
+action             = %(action_mwl)s
 backend            = auto
 banaction          = iptables-multiport
 banaction_allports = iptables-allports
@@ -16,7 +17,7 @@ ignoreip           = 127.0.0.1/8
 ignorecommand      =
 logencoding        = auto
 maxretry           = 1
-mta                = mail
+mta                = sendmail
 port               = 0:65535
 protocol           = tcp
 sender             = fail2ban@$DOMAIN
@@ -43,8 +44,6 @@ action_blocklist_de  = blocklist_de[email="%(sender)s", service=%(filter)s, apik
 action_badips        = badips.py[category="%(__name__)s", banaction="%(banaction)s", agent="%(fail2ban_agent)s"]
 
 action_badips_report = badips[category="%(__name__)s", agent="%(fail2ban_agent)s"]
-
-action = %(action_)s
 
 #
 # JAILS
