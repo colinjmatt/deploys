@@ -20,12 +20,14 @@ yum install     certbot \
                 dnsmasq \
                 dovecot dovecot-pigeonhole \
                 fail2ban \
+                mailx \
                 mariadb-server mysql \
                 opendkim opendmarc \
                 php php-curl php-fpm php-mcrypt php-xml \
                 postgrey \
                 spamassassin \
                 pypolicyd-spf \
+                whois \
                 -y
 
 # Create swap
@@ -170,6 +172,9 @@ else
     done;
 fi
 
+cat ./Configs/certrenew.sh > /etc/cron.daily/certrenew.sh
+chmod +x /etc/cron.daily/certrenew.sh
+
 # Complete nginx setup
 cat ./Configs/nginx-post.conf >/etc/nginx/sites/$DOMAIN.conf
 sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/"$DOMAIN".conf
@@ -211,6 +216,7 @@ find /var/www/$WEBMAILSUB/. -type d -exec chmod 755 {} \;
 find /var/www/$WEBMAILSUB/. -type f -exec chmod 644 {} \;
 chown -R nginx:nginx /var/www/$WEBMAILSUB
 sed -i -e "s/index.html/index.php/g" /etc/nginx/sites/"$WEBMAILSUB"."$DOMAIN".conf
+mysql -u root < ./Configs/rainloop.sql
 
 # Create users & passwords
 for NAME in $USERS ; do
@@ -231,25 +237,20 @@ for PORT in $PORTS; do
 done
 
 # Enable EVERYTHING
-systemctl enable clamsmtpd
-systemctl enable clamsmtp-clamd
-systemctl enable dovecot
-systemctl enable dnsmasq
-systemctl enable fail2ban
-systemctl enable mariadb
-systemctl enable opendmarc
-systemctl enable opendkim
-systemctl enable postfix
-systemctl enable postgrey
-systemctl enable php-fpm
-systemctl enable spamassassin
+systemctl enable    clamsmtpd \
+                    clamsmtp-clamd \
+                    dovecot \
+                    dnsmasq \
+                    fail2ban \
+                    mariadb \
+                    opendmarc \
+                    opendkim \
+                    postfix \
+                    postgrey \
+                    php-fpm \
+                    spamassassin \
 
 rm -rf /tmp/*
 
 printf "Setup complete.\n"
 printf "\033[0;31m\x1b[5m**REBOOT THE EC2 INSTANCE FROM THE AWS CONSOLE\!**\x1b[25m\n"
-
-# TODO
-# certbot renew cron job
-# freshclam cron job
-# mysql-server config
