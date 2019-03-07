@@ -16,7 +16,6 @@ amazon-linux-extras install "$NGINX" -y
 curl http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -o /tmp/epel-release-latest-7.noarch.rpm
 yum install /tmp/epel-release-latest-7.noarch.rpm -y
 yum install     certbot \
-                cifs-utils \
                 clamav clamsmtp \
                 dnsmasq \
                 dovecot dovecot-pigeonhole \
@@ -228,7 +227,7 @@ done
 # Open necessary ports for Firewalld
 PORTS="22 25 80 143 443 465 993"
 for PORT in $PORTS; do
-    firewall-cmd --zone=public --add-port="$PORT"/tcp
+    firewall-cmd --permanent --zone=public --add-port="$PORT"/tcp
 done
 
 # Enable EVERYTHING
