@@ -159,7 +159,7 @@ fi
 sed -i -e "s/nameserver.*/nameserver\ 208.67.220.220/g" /etc/resolv.conf
 mkdir -p /var/www/html/.well-known
 systemctl enable nginx --now
-certbot certonly --register-unsafely-without-email --webroot -w /var/www/html/ -d $DOMAIN
+certbot certonly --register-unsafely-without-email --agree-tos --webroot -w /var/www/html/ -d $DOMAIN
 cat ./Configs/index.html >/var/www/html/index.html
 
 if [ -z "$SUBDOMAINS" ]; then
@@ -167,7 +167,7 @@ if [ -z "$SUBDOMAINS" ]; then
 else
     for SUB in $SUBDOMAINS ; do
         mkdir -p /var/www/"$SUB"/.well-known
-        certbot certonly --register-unsafely-without-email --webroot -w /var/www/"$SUB"/ -d "$SUB"."$DOMAIN"
+        certbot certonly --register-unsafely-without-email --agree-tos --webroot -w /var/www/"$SUB"/ -d "$SUB"."$DOMAIN"
         cat ./Configs/index.html >/var/www/"$SUB"/index.html
     done;
 fi
