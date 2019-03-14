@@ -16,6 +16,7 @@ PermitRootLogin no
 Port 22
 PrintMotd yes
 PubkeyAuthentication yes
+RSAAuthentication yes
 UsePAM yes
 X11Forwarding no
 
