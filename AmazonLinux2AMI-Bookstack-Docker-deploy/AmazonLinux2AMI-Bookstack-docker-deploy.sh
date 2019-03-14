@@ -53,7 +53,7 @@ sudo sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/docker-bookstack.conf
 sudo systemctl enable nginx --now
 
 # Configure certbot
-sudo certbot certonly --register-unsafely-without-email --webroot -w /var/www/docker-bookstack -d "$DOMAIN"
+sudo certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /var/www/docker-bookstack -d "$DOMAIN"
 
 # Configure nginx for SSL with port 80 redirect and reload
 sudo cp ./Configs/docker-bookstack-post-certbot.conf /etc/nginx/sites/docker-bookstack.conf
