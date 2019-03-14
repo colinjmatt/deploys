@@ -70,6 +70,7 @@ cat ./Configs/dovecot-sieve >/etc/skel/.dovecot-sieve
 # Optimise motd
 update-motd --disable
 cat ./Configs/motd >/etc/motd
+sed -i -e "s/\$DOMAIN/""$DOMAIN""/g"
 
 # Configure dnsmasq
 cat ./Configs/dnsmasq.conf >/etc/dnsmasq.conf
