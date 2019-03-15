@@ -57,9 +57,6 @@ for NAME in $SUDOERS ; do
     echo "$NAME ALL=(ALL) ALL" >/etc/sudoers.d/"$NAME"
 done
 
-
-
-
 # Configure easy-rsa
 mkdir -p /etc/easy-rsa
 cp –r /usr/share/easy-rsa/3.0.3/* /etc/easy-rsa
@@ -94,7 +91,45 @@ cp /etc/easy-rsa/pki/issued/vpn-server.crt /etc/openvpn/server/
 # TODO
 # Create script for on-demand revocation
 # cd /etc/easy-rsa
-# easyrsa revoke client1
-# easyrsa gen-crl
+# ./easyrsa revoke client1
+# ./easyrsa gen-crl
 # cp /etc/easy-rsa/pki /etc/openvpn/server/
 # sed -i -e "s/.*crl-verify.*/crl-verify\ \/etc\/openvpn\/server\/crl.pem/g"/etc/openvpn/server/server.conf
+
+# Openvpn conifguration
+# /etc/openvpn/server.conf
+# /etc/sysctl.conf
+
+# Client .ovpn profile
+#client
+#proto udp
+#remote openvpnserver.example.com
+#port 1194
+#dev tun
+#nobind
+
+#key-direction 1
+
+#<ca>
+#-----BEGIN CERTIFICATE-----
+# insert base64 blob from ca.crt
+#-----END CERTIFICATE-----
+#</ca>
+
+#<cert>
+#-----BEGIN CERTIFICATE-----
+# insert base64 blob from client1.crt
+#-----END CERTIFICATE-----
+#</cert>
+
+#<key>
+#-----BEGIN PRIVATE KEY-----
+# insert base64 blob from client1.key
+#-----END PRIVATE KEY-----
+#</key>
+
+#<tls-auth>
+#-----BEGIN OpenVPN Static key V1-----
+# insert ta.key
+#-----END OpenVPN Static key V1-----
+#</tls-auth>
