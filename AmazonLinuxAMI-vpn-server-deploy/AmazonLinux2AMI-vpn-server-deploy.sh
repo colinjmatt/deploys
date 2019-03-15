@@ -24,6 +24,9 @@ swapon -a
 # Make /tmp temp filesystem
 echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0" >> /etc/fstab
 
+# Use Cloudflare DNS
+cat ./Configs/ifcfg-eth0 >>/etc/sysconfig/network-scripts/ifcfg-eth0
+
 # Set hostname
 echo "$HOSTNAME" > /etc/hostname
 hostname $HOSTNAME
