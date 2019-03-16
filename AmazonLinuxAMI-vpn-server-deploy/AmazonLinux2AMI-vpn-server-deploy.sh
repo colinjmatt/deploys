@@ -1,6 +1,7 @@
 #!/bin/bash
 # AWS Lightsail OpenVPN Server Setup on Amazon Linux
-HOSTNAME=example-server
+HOSTNAME="example-server"
+DOMAIN="example.com"
 USERS="user1 user2 user3 user4 user5"
 SSHUSERS="user1 user3" # List of the above users allowed to SSH to the server
 SUDOERS="user1 user4" # List of users to become sudoers
@@ -82,11 +83,47 @@ cp /etc/easy-rsa/pki/ca.crt /etc/openvpn/server
 cp /etc/easy-rsa/pki/private/vpn-server.key /etc/openvpn/server/
 cp /etc/easy-rsa/pki/issued/vpn-server.crt /etc/openvpn/server/
 
-# Generate & sign client cert
+# Enable ip forwarding
+sed -i -e "s/net.ipv4.ip_forward.*/net.ipv4.ip_forward\ =\ 1/g" /etc/sysctl.conf
+cat ./Configs/iptables-config >/etc/sysconfig/iptables-config
+
+touch /etc/sysconfig/iptables
+chkconfig iptables on
+/etc/init.d/iptables start
+modprobe iptable_nat
+echo 1 | tee /proc/sys/net/ipv4/ip_forward
+iptables -t nat -A POSTROUTING -o eth0 -s 10.8.0.0/24 -j MASQUERADE
+/etc/init.d/iptables save
+
+# Openvpn conifguration
+cat ./Configs/server.conf >/etc/openvpn/server.conf
+
+# Client .ovpn profile
+mkdir -p /etc/openvpn/template
+cat ./Configs/profile.ovpn >/etc/openvpn/template/profile.ovpn
+sed -i -e "s/\$DOMAIN/""$DOMAIN""/g"
+
 # TODO
-# Create script to generate client certs on-demand
+# Create script to generate client certs and ovpn profile on-demand
 ./easyrsa gen-req client1 nopass
 ./easyrsa sign-req client client1
+# Script to take client certs and add to ovpn template and email to requestor
+# Take /etc/openvpn/template/profile.ovpn and add the below info:
+    #<ca>
+    #ca.crt
+    #</ca>
+
+    #<cert>
+    #client.crt
+    #</cert>
+
+    #<key>
+    #client.key
+    #</key>
+
+    #<tls-auth>
+    #ta.key
+    #</tls-auth>
 
 # TODO
 # Create script for on-demand revocation
@@ -95,41 +132,3 @@ cp /etc/easy-rsa/pki/issued/vpn-server.crt /etc/openvpn/server/
 # ./easyrsa gen-crl
 # cp /etc/easy-rsa/pki /etc/openvpn/server/
 # sed -i -e "s/.*crl-verify.*/crl-verify\ \/etc\/openvpn\/server\/crl.pem/g"/etc/openvpn/server/server.conf
-
-# Openvpn conifguration
-# /etc/openvpn/server.conf
-# /etc/sysctl.conf
-
-# Client .ovpn profile
-#client
-#proto udp
-#remote openvpnserver.example.com
-#port 1194
-#dev tun
-#nobind
-
-#key-direction 1
-
-#<ca>
-#-----BEGIN CERTIFICATE-----
-# insert base64 blob from ca.crt
-#-----END CERTIFICATE-----
-#</ca>
-
-#<cert>
-#-----BEGIN CERTIFICATE-----
-# insert base64 blob from client1.crt
-#-----END CERTIFICATE-----
-#</cert>
-
-#<key>
-#-----BEGIN PRIVATE KEY-----
-# insert base64 blob from client1.key
-#-----END PRIVATE KEY-----
-#</key>
-
-#<tls-auth>
-#-----BEGIN OpenVPN Static key V1-----
-# insert ta.key
-#-----END OpenVPN Static key V1-----
-#</tls-auth>
