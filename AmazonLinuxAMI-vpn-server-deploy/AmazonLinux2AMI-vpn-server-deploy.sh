@@ -1,11 +1,11 @@
 #!/bin/bash
 # AWS Lightsail OpenVPN Server Setup on Amazon Linux
-HOSTNAME="example-server"
-DOMAIN="example.com"
-USERS="user1 user2 user3 user4 user5"
-SSHUSERS="user1 user3" # List of the above users allowed to SSH to the server
-SSHIP="0.0.0.0/0" # Change if SSH access should be restricted to an IP or IP range
-SUDOERS="user1 user4" # List of users to become sudoers
+hostname="example-server"
+domain="example.com"
+users="user1 user2 user3 user4 user5"
+sshusers="user1 user3" # List of the above users allowed to SSH to the server
+sship="0.0.0.0/0" # Change if SSH access should be restricted to an IP or IP range
+sudoers="user1 user4" # List of users to become sudoers
 
 # Install packages
 cd /tmp || return
@@ -29,12 +29,12 @@ echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0" >> /etc/fstab
 cat ./Configs/ifcfg-eth0 >>/etc/sysconfig/network-scripts/ifcfg-eth0
 
 # Set hostname
-sed -i -e "s/HOSTNAME=.*/HOSTNAME=""$HOSTNAME""/g" /etc/sysconfig/network
-hostname $HOSTNAME
+sed -i -e "s/hostname=.*/hostname=""$hostname""/g" /etc/sysconfig/network
+hostname $hostname
 
 # Configure SSH
 cat ./Configs/sshd_config >/etc/ssh/sshd_config
-sed -i -e "s/\$SSHUSERS/""$SSHUSERS""/g"
+sed -i -e "s/\$sshusers/""$sshusers""/g"
 /etc/init.d/sshd reload
 
 # Configure .bashrc
@@ -45,17 +45,18 @@ cat ./Configs/user_bashrc >/home/ec2-user/.bashrc
 # Optimise motd
 update-motd --disable
 cat ./Configs/motd >/etc/motd
+sed -i -e "s/\$domain/""$domain""/g" /etc/motd
 
 # Create users & passwords
-for NAME in $USERS ; do
-    useradd -m "$NAME"
-    echo "Password for $NAME"
-    passwd "$NAME"
+for name in $users ; do
+    useradd -m "$name"
+    echo "Password for $name"
+    passwd "$name"
 done
 
 # Add sudoers with password required
-for NAME in $SUDOERS ; do
-    echo "$NAME ALL=(ALL) ALL" >/etc/sudoers.d/"$NAME"
+for name in $sudoers ; do
+    echo "$name ALL=(ALL) ALL" >/etc/sudoers.d/"$name"
 done
 
 # Configure easy-rsa
@@ -96,7 +97,7 @@ iptables -t nat -A POSTROUTING -o eth0 -s 10.8.0.0/24 -j MASQUERADE
 iptables -P INPUT DROP
 iptables -A INPUT -i eth0 -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 53 -m state --state ESTABLISHED -j ACCEPT
-iptables -A INPUT -i eth0 -p tcp -s $SSHIP --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp -s $sship --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 /etc/init.d/iptables save
 
@@ -107,14 +108,11 @@ cat ./Configs/server.conf >/etc/openvpn/server.conf
 mkdir -p /etc/openvpn/template-profiles
 mkdir -p /etc/openvpn/client-profiles
 cat ./Configs/profile.ovpn >/etc/openvpn/template-profiles/profile.ovpn
-sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/openvpn/template-profiles/profile.ovpn
+sed -i -e "s/\$domain/""$domain""/g" /etc/openvpn/template-profiles/profile.ovpn
 
 # Copy cert & ovpn profile generator script
-
-# TODO
-# Create script to generate client certs and ovpn profile on-demand
-# Script to take client certs and add to ovpn template and email to requestor
-
+cat ./Configs/gen-ovpn >/usr/local/bin/gen-ovpn
+chmod +x /usr/local/bin/gen-ovpn
 
 # TODO
 # Create script for on-demand revocation
