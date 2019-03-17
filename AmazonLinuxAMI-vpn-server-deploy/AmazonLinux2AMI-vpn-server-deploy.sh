@@ -94,15 +94,18 @@ chkconfig iptables on
 modprobe iptable_nat
 echo 1 | tee /proc/sys/net/ipv4/ip_forward
 iptables -t nat -A POSTROUTING -o eth0 -s 10.8.0.0/24 -j MASQUERADE
+iptables -t nat -A POSTROUTING -o eth0 -s 10.8.1.0/24 -j MASQUERADE
 iptables -P INPUT DROP
 iptables -A INPUT -i eth0 -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p udp --dport 1194 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 53 -m state --state ESTABLISHED -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp -s $sship --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 /etc/init.d/iptables save
 
 # Openvpn conifguration
-cat ./Configs/server.conf >/etc/openvpn/server.conf
+cat ./Configs/tcpserver.conf >/etc/openvpn/tcpserver.conf
+cat ./Configs/udpserver.conf >/etc/openvpn/udpserver.conf
 
 # Client .ovpn profile
 mkdir -p /etc/openvpn/template-profiles
