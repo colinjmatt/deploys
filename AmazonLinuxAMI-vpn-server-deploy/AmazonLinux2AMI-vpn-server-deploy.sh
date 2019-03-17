@@ -4,14 +4,14 @@ HOSTNAME="example-server"
 DOMAIN="example.com"
 USERS="user1 user2 user3 user4 user5"
 SSHUSERS="user1 user3" # List of the above users allowed to SSH to the server
+SSHIP="0.0.0.0/0" # Change if SSH access should be restricted to an IP or IP range
 SUDOERS="user1 user4" # List of users to become sudoers
 
 # Install packages
-cd /tmp || exit
-curl -O http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-sudo yum install epel-release-latest-7.noarch.rpm
-
-yum install openvpn easy-rsa -y
+cd /tmp || return
+curl -O http://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+yum install epel-release-latest-6.noarch.rpm
+yum install openvpn easy-rsa mailx -y
 
 # Create swap
 dd if=/dev/zero of=/mnt/swapfile bs=1M count=2048
@@ -69,7 +69,7 @@ openssl dhparam -out /etc/openvpn/server/dh.pem 2048
 openvpn --genkey --secret /etc/openvpn/server/ta.key
 
 # Initialise PKI
-cd /etc/easy-rsa
+cd /etc/easy-rsa || return
 source ./vars
 ./easyrsa init-pki
 
@@ -83,7 +83,7 @@ cp /etc/easy-rsa/pki/ca.crt /etc/openvpn/server
 cp /etc/easy-rsa/pki/private/vpn-server.key /etc/openvpn/server/
 cp /etc/easy-rsa/pki/issued/vpn-server.crt /etc/openvpn/server/
 
-# Enable ip forwarding
+# Enable ip forwarding & firewall hardening
 sed -i -e "s/net.ipv4.ip_forward.*/net.ipv4.ip_forward\ =\ 1/g" /etc/sysctl.conf
 cat ./Configs/iptables-config >/etc/sysconfig/iptables-config
 
@@ -93,42 +93,33 @@ chkconfig iptables on
 modprobe iptable_nat
 echo 1 | tee /proc/sys/net/ipv4/ip_forward
 iptables -t nat -A POSTROUTING -o eth0 -s 10.8.0.0/24 -j MASQUERADE
+iptables -P INPUT DROP
+iptables -A INPUT -i eth0 -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp --dport 53 -m state --state ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp -s $SSHIP --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 /etc/init.d/iptables save
 
 # Openvpn conifguration
 cat ./Configs/server.conf >/etc/openvpn/server.conf
 
 # Client .ovpn profile
-mkdir -p /etc/openvpn/template
-cat ./Configs/profile.ovpn >/etc/openvpn/template/profile.ovpn
-sed -i -e "s/\$DOMAIN/""$DOMAIN""/g"
+mkdir -p /etc/openvpn/template-profiles
+mkdir -p /etc/openvpn/client-profiles
+cat ./Configs/profile.ovpn >/etc/openvpn/template-profiles/profile.ovpn
+sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/openvpn/template-profiles/profile.ovpn
+
+# Copy cert & ovpn profile generator script
 
 # TODO
 # Create script to generate client certs and ovpn profile on-demand
-./easyrsa gen-req client1 nopass
-./easyrsa sign-req client client1
 # Script to take client certs and add to ovpn template and email to requestor
-# Take /etc/openvpn/template/profile.ovpn and add the below info:
-    #<ca>
-    #ca.crt
-    #</ca>
 
-    #<cert>
-    #client.crt
-    #</cert>
-
-    #<key>
-    #client.key
-    #</key>
-
-    #<tls-auth>
-    #ta.key
-    #</tls-auth>
 
 # TODO
 # Create script for on-demand revocation
 # cd /etc/easy-rsa
-# ./easyrsa revoke client1
+# ./easyrsa revoke $VPNCLIENT
 # ./easyrsa gen-crl
 # cp /etc/easy-rsa/pki /etc/openvpn/server/
 # sed -i -e "s/.*crl-verify.*/crl-verify\ \/etc\/openvpn\/server\/crl.pem/g"/etc/openvpn/server/server.conf
