@@ -1,6 +1,7 @@
 #!/bin/bash
 vpnclient=""
 vpnname=""
+protocol=""
 relaydomain=""
 destinationemail=""
 authuser=""
@@ -8,29 +9,31 @@ authpassword=""
 
 # Usage
 print_usage() {
-    printf "Usage: gen-ovpn -v [client name] -V [vpn server name] -r [relay server] -e [destination email]
+    printf "Usage: gen-ovpn -v [client name] -V [vpn server name] -p [protocol] -r [relay server] -a [user] -P [password] -e [destination email]
     Port 587 will be used if a username AND password is provided to authenticate with the smtp relay, otherwise port 25 is used without authentication.
     Non-authenticated smtp requests will likely be denied unless the IP it is being sent from is whitelisted.
 
     -v    Name given to the client .ovpn profile and associated certificates e.g. client1
     -V    Friendly name of the VPN server e.g. PersonalVPN
+    -p    Specify UDP or TCP for either UDP port 1194 or TCP port 443 for the VPN connection
     -r    Name of the mail server that will act as the smtp relay to send the profile email
     -a    Name used to authenticate with the smtp relay (optional)
-    -p    Password used to authenticate with the smtp relay (optional)
+    -P    Password used to authenticate with the smtp relay (optional)
     -d    The email address the .ovpn profile should be sent to
     -h    Prints these instructions
 "
 }
 
 # Flags
-while getopts 'v:V:r:d:a:p:h' flag; do
+while getopts 'v:V:p:r:d:a:P:h' flag; do
     case "${flag}" in
         v) vpnclient="${OPTARG}" ;;
         V) vpnname="${OPTARG}" ;;
+        p) protocol="${OPTARG}" ;;
         r) relaydomain="${OPTARG}" ;;
         d) destinationemail="${OPTARG}" ;;
         a) authuser="${OPTARG}" ;;
-        p) authpassword="${OPTARG}" ;;
+        P) authpassword="${OPTARG}" ;;
         h) print_usage
            exit 0 ;;
         *) print_usage
@@ -38,15 +41,31 @@ while getopts 'v:V:r:d:a:p:h' flag; do
     esac
 done
 
-if [[ -z "$vpnclient" && -z "$vpnname" && -z "$relaydomain" && -z "$destinationemail" ]]; then
-    echo "A client name, VPN name, relay domain and destination email address must be specified."; echo ""
+# Check all required variables are present
+if [[ -z "$vpnclient" && -z "$vpnname" && -z "$protocol" && -z "$relaydomain" && -z "$destinationemail" ]]; then
+    echo -e "ERROR. A client name, VPN name, protocol, relay domain and destination email address must be specified.\n"; echo ""
     exit 1
 fi
 
-cd /etc/easy-rsa || return
-./easyrsa gen-req "$vpnclient" nopass
-./easyrsa sign-req client "$vpnclient"
-cp /etc/openvpn/template-profiles/profile.ovpn /etc/openvpn/client-profiles/"$vpnclient".ovpn
+# Check either tcp or udp has been chosen and generated the .ovpn profile or exit because value doesn't match
+if [[ $protocol =~ ^(UDP|udp)$ ]]; then
+    cd /etc/easy-rsa || return
+    ./easyrsa gen-req "$vpnclient" nopass
+    ./easyrsa sign-req client "$vpnclient"
+    cp /etc/openvpn/template-profiles/profile.ovpn /etc/openvpn/client-profiles/"$vpnclient".ovpn
+    sed -i -e "s/port.*/port\ 1194/g" /etc/openvpn/client-profiles/"$vpnclient".ovpn
+    sed -i -e "s/proto.*/proto\ udp/g" /etc/openvpn/client-profiles/"$vpnclient".ovpn
+elif [[ $protocol =~ ^(TCP|tcp)$ ]]; then
+    cd /etc/easy-rsa || return
+    ./easyrsa gen-req "$vpnclient" nopass
+    ./easyrsa sign-req client "$vpnclient"
+    cp /etc/openvpn/template-profiles/profile.ovpn /etc/openvpn/client-profiles/"$vpnclient".ovpn
+else
+    echo -e "ERROR. Please specify ether TCP or UDP protocol using -p\n"
+    exit 1
+fi
+
+# Add the required certs and keys to the .ovpn profile
 {
     echo -e " \n<ca>"
     cat /etc/openvpn/server/ca.crt
@@ -59,24 +78,25 @@ cp /etc/openvpn/template-profiles/profile.ovpn /etc/openvpn/client-profiles/"$vp
     echo "</tls-auth>"
 } >>/etc/openvpn/client-profiles/"$vpnclient".ovpn
 
-if [[ -n "$authuser" && -z "$authpassword" ]]; then
+# Send the .ovpn profile to the chosen email address
+if [[ -n "$authuser" && -n "$authpassword" ]]; then
     echo -e "Hello, \n Here is your requested OVPN profile for $vpnname." \
         | mailx -v -s "$vpnname OVPN Profile" \
         -S smtp-use-starttls \
         -S ssl-verify=ignore \
         -S smtp-auth=login \
-        -S smtp=smtp://$relaydomain:587 \
+        -S smtp=smtp://"$relaydomain":587 \
         -S from="no-reply@$relaydomain($vpnname)" \
-        -S smtp-auth-user=$authuser \
-        -S smtp-auth-password=$authpassword \
+        -S smtp-auth-user="$authuser" \
+        -S smtp-auth-password="$authpassword" \
         -S ssl-verify=ignore \
         -S nss-config-dir=~/etc/pki/nssdb/ \
-        $destinationemail
+        "$destinationemail"
 else
     echo -e "Hello, \n Here is your requested OVPN profile for $vpnname." \
         | mailx  -s "$vpnname OVPN Profile" \
-        -S smtp=smtp://$relaydomain:25 \
+        -S smtp=smtp://"$relaydomain":25 \
         -S from="no-reply@$relaydomain($vpnname)" \
-        -a /etc/openvpn/client-profiles/$vpnclient.ovpn \
-        $destinationemail
+        -a /etc/openvpn/client-profiles/"$vpnclient".ovpn \
+        "$destinationemail"
 fi
