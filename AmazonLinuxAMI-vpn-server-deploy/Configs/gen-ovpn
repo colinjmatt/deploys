@@ -19,13 +19,13 @@ print_usage() {
     -r    Name of the mail server that will act as the smtp relay to send the profile email
     -a    Name used to authenticate with the smtp relay (optional)
     -P    Password used to authenticate with the smtp relay (optional)
-    -d    The email address the .ovpn profile should be sent to
+    -e    The email address the .ovpn profile should be sent to
     -h    Prints these instructions
 "
 }
 
 # Flags
-while getopts 'v:V:p:r:d:a:P:h' flag; do
+while getopts 'v:V:p:r:d:a:P:e:h' flag; do
     case "${flag}" in
         v) vpnclient="${OPTARG}" ;;
         V) vpnname="${OPTARG}" ;;
@@ -34,6 +34,7 @@ while getopts 'v:V:p:r:d:a:P:h' flag; do
         d) destinationemail="${OPTARG}" ;;
         a) authuser="${OPTARG}" ;;
         P) authpassword="${OPTARG}" ;;
+        e) destinationemail="${OPTARG}" ;;
         h) print_usage
            exit 0 ;;
         *) print_usage
@@ -41,31 +42,34 @@ while getopts 'v:V:p:r:d:a:P:h' flag; do
     esac
 done
 
-# Check all required variables are present
+# Check all required variables are present and protocol is correct
 if [[ -z "$vpnclient" && -z "$vpnname" && -z "$protocol" && -z "$relaydomain" && -z "$destinationemail" ]]; then
     echo -e "ERROR. A client name, VPN name, protocol, relay domain and destination email address must be specified.\n"; echo ""
     exit 1
-fi
-
-# Check either tcp or udp has been chosen and generated the .ovpn profile or exit because value doesn't match
-if [[ $protocol =~ ^(UDP|udp)$ ]]; then
-    cd /etc/easy-rsa || return
-    ./easyrsa gen-req "$vpnclient" nopass
-    ./easyrsa sign-req client "$vpnclient"
-    cp /etc/openvpn/template-profiles/profile.ovpn /etc/openvpn/client-profiles/"$vpnclient".ovpn
-    sed -i -e "s/port.*/port\ 1194/g" /etc/openvpn/client-profiles/"$vpnclient".ovpn
-    sed -i -e "s/proto.*/proto\ udp/g" /etc/openvpn/client-profiles/"$vpnclient".ovpn
-elif [[ $protocol =~ ^(TCP|tcp)$ ]]; then
-    cd /etc/easy-rsa || return
-    ./easyrsa gen-req "$vpnclient" nopass
-    ./easyrsa sign-req client "$vpnclient"
-    cp /etc/openvpn/template-profiles/profile.ovpn /etc/openvpn/client-profiles/"$vpnclient".ovpn
-else
+elif ! [[ $protocol =~ ^(UDP|udp|TCP|tcp)$ ]]; then
     echo -e "ERROR. Please specify ether TCP or UDP protocol using -p\n"
     exit 1
 fi
 
-# Add the required certs and keys to the .ovpn profile
+# Check either tcp or udp has been chosen and generate the certless .ovpn profile or exit because value doesn't match
+if [[ $protocol =~ ^(UDP|udp)$ ]]; then
+    cp /etc/openvpn/template-profiles/profile.ovpn /etc/openvpn/client-profiles/"$vpnclient".ovpn
+    sed -i -e "s/port.*/port\ 1194/g" /etc/openvpn/client-profiles/"$vpnclient".ovpn
+    sed -i -e "s/proto.*/proto\ udp/g" /etc/openvpn/client-profiles/"$vpnclient".ovpn
+elif [[ $protocol =~ ^(TCP|tcp)$ ]]; then
+    cp /etc/openvpn/template-profiles/profile.ovpn /etc/openvpn/client-profiles/"$vpnclient".ovpn
+fi
+
+# Check if the given vpn client name already has a cert
+if [[ -f /etc/easy-rsa/pki/private/"$vpnclient".key ]]; then
+    :
+else
+    cd /etc/easy-rsa || return
+    ./easyrsa gen-req "$vpnclient" nopass
+    ./easyrsa sign-req client "$vpnclient"
+fi
+
+# Add the certs and keys to the .ovpn profile
 {
     echo -e " \n<ca>"
     cat /etc/openvpn/server/ca.crt
