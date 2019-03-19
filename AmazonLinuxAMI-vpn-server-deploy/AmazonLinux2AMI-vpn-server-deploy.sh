@@ -84,7 +84,7 @@ cp /etc/easy-rsa/pki/ca.crt /etc/openvpn/server
 cp /etc/easy-rsa/pki/private/vpn-server.key /etc/openvpn/server/
 cp /etc/easy-rsa/pki/issued/vpn-server.crt /etc/openvpn/server/
 
-# Enable ip forwarding & firewall hardening
+# Enable ip forwarding & firewall hardening rules
 sed -i -e "s/net.ipv4.ip_forward.*/net.ipv4.ip_forward\ =\ 1/g" /etc/sysctl.conf
 cat ./Configs/iptables-config >/etc/sysconfig/iptables-config
 
