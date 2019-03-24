@@ -8,9 +8,7 @@ sship="0.0.0.0/0" # Change if SSH access should be restricted to an IP or IP ran
 sudoers="user1 user4" # List of users to become sudoers
 
 # Install packages
-cd /tmp || return
-curl -O http://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
-yum install epel-release-latest-6.noarch.rpm
+yum-config-manager --enable epel
 yum install openvpn easy-rsa mailx -y
 
 # Create swap
@@ -29,12 +27,12 @@ echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0" >> /etc/fstab
 cat ./Configs/ifcfg-eth0 >>/etc/sysconfig/network-scripts/ifcfg-eth0
 
 # Set hostname
-sed -i -e "s/hostname=.*/hostname=""$hostname""/g" /etc/sysconfig/network
+sed -i -e "s/HOSTNAME=.*/HOSTNAME=""$hostname""/g" /etc/sysconfig/network
 hostname $hostname
 
 # Configure SSH
 cat ./Configs/sshd_config >/etc/ssh/sshd_config
-sed -i -e "s/\$sshusers/""$sshusers""/g"
+sed -i -e "s/\$sshusers/""$sshusers""/g" /etc/ssh/sshd_config
 /etc/init.d/sshd reload
 
 # Configure .bashrc
@@ -61,7 +59,7 @@ done
 
 # Configure easy-rsa
 mkdir -p /etc/easy-rsa
-cp –r /usr/share/easy-rsa/3.0.3/* /etc/easy-rsa
+cp -r /usr/share/easy-rsa/3.0.*/* /etc/easy-rsa
 cat ./Configs/vars >/etc/easy-rsa/vars
 
 # Generate Diffie Hellman & HMAC
@@ -70,6 +68,7 @@ openssl dhparam -out /etc/openvpn/server/dh.pem 2048
 openvpn --genkey --secret /etc/openvpn/server/ta.key
 
 # Initialise PKI
+(
 cd /etc/easy-rsa || return
 source ./vars
 ./easyrsa init-pki
@@ -83,7 +82,7 @@ cp /etc/easy-rsa/pki/ca.crt /etc/openvpn/server
 ./easyrsa sign-req server vpn-server
 cp /etc/easy-rsa/pki/private/vpn-server.key /etc/openvpn/server/
 cp /etc/easy-rsa/pki/issued/vpn-server.crt /etc/openvpn/server/
-
+)
 # Enable ip forwarding & firewall hardening rules
 sed -i -e "s/net.ipv4.ip_forward.*/net.ipv4.ip_forward\ =\ 1/g" /etc/sysctl.conf
 cat ./Configs/iptables-config >/etc/sysconfig/iptables-config
@@ -99,7 +98,7 @@ iptables -P INPUT DROP
 iptables -A INPUT -i eth0 -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -A INPUT -i eth0 -p udp --dport 1194 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 53 -m state --state ESTABLISHED -j ACCEPT
-iptables -A INPUT -i eth0 -p tcp -s $sship --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp -s "$sship" --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 /etc/init.d/iptables save
 
@@ -116,6 +115,10 @@ sed -i -e "s/\$domain/""$domain""/g" /etc/openvpn/template-profiles/profile.ovpn
 # Copy cert & ovpn profile generator script
 cat ./Configs/gen-ovpn >/usr/local/bin/gen-ovpn
 chmod +x /usr/local/bin/gen-ovpn
+
+# Start and enable openvpn
+chkconfig openvpn on
+/etc/init.d/openvpn start
 
 # TODO
 # Create script for on-demand revocation
