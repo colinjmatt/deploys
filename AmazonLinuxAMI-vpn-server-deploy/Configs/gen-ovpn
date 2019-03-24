@@ -61,12 +61,10 @@ elif [[ $protocol =~ ^(TCP|tcp)$ ]]; then
 fi
 
 # Check if the given vpn client name already has a cert
-if [[ -f /etc/easy-rsa/pki/private/"$vpnclient".key ]]; then
-    :
-else
+if [[ ! -f /etc/easy-rsa/pki/issued/"$vpnclient".crt ]]; then
     cd /etc/easy-rsa || return
-    ./easyrsa gen-req "$vpnclient" nopass
-    ./easyrsa sign-req client "$vpnclient"
+    ./easyrsa --batch gen-req "$vpnclient" nopass
+    ./easyrsa --batch sign-req client "$vpnclient"
 fi
 
 # Add the certs and keys to the .ovpn profile
