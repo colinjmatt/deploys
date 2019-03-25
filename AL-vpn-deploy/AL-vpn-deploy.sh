@@ -36,7 +36,7 @@ sed -i -e "s/\$sshusers/""$sshusers""/g" /etc/ssh/sshd_config
 /etc/init.d/sshd reload
 
 # Configure .bashrc
-cat ./Configs/root_bashrc >>/root/.bashrc
+cat ./Configs/root_bashrc >/root/.bashrc
 cat ./Configs/user_bashrc >/etc/skel/.bashrc
 cat ./Configs/user_bashrc >/home/ec2-user/.bashrc
 
@@ -97,7 +97,6 @@ iptables -t nat -A POSTROUTING -o eth0 -s 10.8.1.0/24 -j MASQUERADE
 iptables -P INPUT DROP
 iptables -A INPUT -i eth0 -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -A INPUT -i eth0 -p udp --dport 1194 -m state --state NEW,ESTABLISHED -j ACCEPT
-iptables -A INPUT -i eth0 -p tcp --dport 53 -m state --state ESTABLISHED -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp -s "$sship" --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 /etc/init.d/iptables save
@@ -117,6 +116,7 @@ cat ./Configs/gen-ovpn >/usr/local/bin/gen-ovpn
 chmod +x /usr/local/bin/gen-ovpn
 
 # Start and enable openvpn
+/etc/init.d/network restart
 chkconfig openvpn on
 /etc/init.d/openvpn start
 
