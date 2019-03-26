@@ -8,7 +8,19 @@ sship="0.0.0.0/0" # Change if SSH access should be restricted to an IP or IP ran
 sudoers="user1 user4" # List of users to become sudoers
 
 # Install packages
-yum install transmission-daemon -y
+# yum install transmission-daemon -y
+
+# 2.92 (14714) is broken. 2.94 can be downloaded instead with the following:
+yum remove libevent -y # Only seems to have nfs-utils as a dependency and 2.94 depends on libevent2 2.0.10
+( cd /tmp || return
+wget  http://geekery.altervista.org/geekery/el6/x86_64/libevent2-2.0.10-1.el6.geekery.x86_64.rpm \
+      http://geekery.altervista.org/geekery/el6/x86_64/transmission-common-2.94-1.el6.geekery.x86_64.rpm \
+      http://geekery.altervista.org/geekery/el6/x86_64/transmission-daemon-2.94-1.el6.geekery.x86_64.rpm
+
+yum install libevent2-2.0.10-1.el6.geekery.x86_64.rpm \
+            transmission-common-2.94-1.el6.geekery.x86_64.rpm \
+            transmission-daemon-2.94-1.el6.geekery.x86_64.rpm
+)
 
 pip install --upgrade setuptools
 pip install flexget
@@ -65,11 +77,17 @@ chkconfig iptables on
 /etc/init.d/iptables start
 iptables -P INPUT DROP
 iptables -A INPUT -i eth0 -p tcp --dport 9091 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp --dport 45535 -m state --state NEW,ESTABLISHED -j ACCEPT # possibly needed for transmission port
 iptables -A INPUT -i eth0 -p tcp -s "$sship" --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 /etc/init.d/iptables save
 
 # TODO
 # The actual setup of transmission and flexget
+# From the wiki:
+# Some Linux distributions' start script for transmission-daemon use different location.
+# This varies by distribution, but two paths sometimes used are
+# /var/lib/transmission-daemon and /var/run/transmission.
+# https://github.com/transmission/transmission/wiki/Environment-Variables for more config
 
 /etc/init.d/network restart
