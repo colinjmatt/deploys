@@ -105,15 +105,17 @@ sed -i -e " s/\$downcomplete/""$downcomplete""/g \
 pip install --upgrade setuptools
 pip install flexget transmissionrpc
 mkdir -p /etc/flexget
-cat ./Configs/config.yml >/etc/flexget/config.yml
+cat ./Configs/config.yml >/var/lib/flexget/config.yml
 sed -i -e " s/\$rssfeed/""$rssfeed""/g \
             s/\$transmissionpass/""$transmissionpass""/g" \
-            /root/.flexget/config.yml
+            /var/lib/flexget/config.yml
 
 groupadd -r flexget
-useradd -M -r -g flexget -s /sbin/nologin -d /var/lib/flexget flexget
+useradd -M -r -g flexget -d /var/lib/flexget flexget
 mkdir -p /var/lib/flexget
 chown -R flexget:flexget /var/lib/flexget/
+touch /var/log/flexget.log
+chown flexget:flexget /var/log/flexget.log
 echo "@reboot flexget /usr/local/bin/flexget -c /var/lib/flexget/config.yml -l /var/log/flexget.log daemon start -d" >/etc/cron.d/flexget
 
 # Install & configure nginx
