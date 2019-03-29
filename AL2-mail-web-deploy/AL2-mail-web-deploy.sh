@@ -1,19 +1,11 @@
 #!/bin/bash
 # AWS Mail Server Setup on Amazon Linux 2
 
-# Name of the server
-hostname="example-server"
 # FQDN of the server
 domain="example.com"
-# List of user accounts to create
-users="user1 user2 user3 user4 user5"
-# List of the above users allowed to SSH to the server
-sshusers="user1 user3"
-# List of users to become sudoers
-sudoers="user1 user4"
 # Leave this blank if no subdomains are required
 subdomains="sub1 sub2 sub3"
-# Choose one of the above subdomains that will handle webmail. leave blank if a subdomain isn't being used for the rainloop frontend
+# Choose one of the above subdomains that will handle webmail. leave blank and a default value of "html" will be used
 webmailsub="sub1"
 
 # Install packages
@@ -37,47 +29,16 @@ yum install     certbot \
                 whois \
                 -y
 
-# Create swap
-dd if=/dev/zero of=/mnt/swapfile bs=1M count=2048
-chown root:root /mnt/swapfile
-chmod 600 /mnt/swapfile
-mkswap /mnt/swapfile
-swapon /mnt/swapfile
-echo "/mnt/swapfile swap swap defaults 0 0" >> /etc/fstab
-swapon -a
-
-# Make /tmp temp filesystem
-echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0" >> /etc/fstab
-
 # Generate Diffie Hellman
 openssl dhparam -out /etc/ssl/dhparams.pem 4096
-
-# Set hostname
-echo "$hostname" > /etc/hostname
-hostname $hostname
 
 # Set aliases
 cat ./Configs/aliases >/etc/aliases
 newaliases
 
-# Configure SSH
-cat ./Configs/sshd_config >/etc/ssh/sshd_config
-sed -i -e "s/\$sshusers/""$sshusers""/g"
-systemctl reload sshd
-
-# Configure .bashrc
-cat ./Configs/root_bashrc >>/root/.bashrc
-cat ./Configs/user_bashrc >/etc/skel/.bashrc
-cat ./Configs/user_bashrc >/home/ec2-user/.bashrc
-
 # Make skel mail directories & insert sieve script
 mkdir -p /etc/skel/Maildir/{cur,new,tmp}
 cat ./Configs/dovecot-sieve >/etc/skel/.dovecot-sieve
-
-# Optimise motd
-update-motd --disable
-cat ./Configs/motd >/etc/motd
-sed -i -e "s/\$domain/""$domain""/g"
 
 # Configure dnsmasq
 cat ./Configs/dnsmasq.conf >/etc/dnsmasq.conf
@@ -226,18 +187,6 @@ find /var/www/$webmailsub/. -type f -exec chmod 644 {} \;
 chown -R nginx:nginx /var/www/$webmailsub
 sed -i -e "s/index.html/index.php/g" /etc/nginx/sites/"$webmailsub"."$domain".conf
 mysql -u root < ./Configs/rainloop.sql
-
-# Create users & passwords
-for name in $users ; do
-    useradd -m "$name"
-    echo "Password for $name"
-    passwd "$name"
-done
-
-# Add sudoers with password required
-for name in $sudoers ; do
-    echo "$name ALL=(ALL) ALL" >/etc/sudoers.d/"$name"
-done
 
 # Open necessary ports for Firewalld
 ports="22 25 80 143 443 465 993"
