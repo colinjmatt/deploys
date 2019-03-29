@@ -8,7 +8,7 @@ banaction          = iptables-multiport
 banaction_allports = iptables-allports
 bantime            = 31536000
 chain              = INPUT
-destemail          = postmaster@$DOMAIN
+destemail          = postmaster@$domain
 enabled            = false
 fail2ban_agent     = Fail2Ban/%(fail2ban_version)s
 filter             = %(__name__)s
@@ -20,7 +20,7 @@ maxretry           = 1
 mta                = sendmail
 port               = 0:65535
 protocol           = tcp
-sender             = fail2ban@$DOMAIN
+sender             = fail2ban@$domain
 sendername         = Fail2Ban
 usedns             = yes
 
