@@ -1,11 +1,18 @@
 #!/bin/bash
 # AWS Lightsail OpenVPN Server Setup on Amazon Linux
+
+# Name of the server
 hostname="example-server"
+# FQDN of the server
 domain="example.com"
+# List of user accounts to create
 users="user1 user2 user3 user4 user5"
-sshusers="user1 user3" # List of the above users allowed to SSH to the server
-sship="0.0.0.0/0" # Change if SSH access should be restricted to an IP or IP range
-sudoers="user1 user4" # List of users to become sudoers
+# List of the above users allowed to SSH to the server
+sshusers="user1 user3"
+# Change if SSH access should be restricted to an IP or IP range
+sship="0.0.0.0/0"
+# List of users to become sudoers
+sudoers="user1 user4"
 
 # Install packages
 yum-config-manager --enable epel
@@ -127,3 +134,6 @@ chkconfig openvpn on
 # ./easyrsa gen-crl
 # cp /etc/easy-rsa/pki /etc/openvpn/server/
 # sed -i -e "s/.*crl-verify.*/crl-verify\ \/etc\/openvpn\/server\/crl.pem/g"/etc/openvpn/server/server.conf
+
+printf "Setup complete.\n"
+printf "\033[0;31m\x1b[5m**REBOOT THIS INSTANCE FROM THE AWS CONSOLE\!**\x1b[25m\n"
