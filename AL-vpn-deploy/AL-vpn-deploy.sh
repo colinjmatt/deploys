@@ -5,6 +5,13 @@
 domain="example.com"
 # List of user accounts to create
 
+# Disable as much logging as possible
+cat ./Configs/rsyslog.conf >/etc/rsyslog.conf
+rm -rf /etc/rsyslog.d/*
+ln -sfn /dev/null /var/log/lastlog
+ln -sfn /dev/null /var/log/wtmp
+ln -sfn /dev/null /var/log/audit/audit.log
+
 # Install packages
 yum-config-manager --enable epel
 yum install openvpn easy-rsa mailx -y
@@ -15,7 +22,6 @@ for dir in $(ls -d /home/*)
 do
     sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" /home/$dir/.bashrc
 done
-
 
 # Use Cloudflare DNS
 cat ./Configs/ifcfg-eth0 >>/etc/sysconfig/network-scripts/ifcfg-eth0
@@ -48,6 +54,14 @@ cp /etc/easy-rsa/pki/issued/vpn-server.crt /etc/openvpn/server/ )
 # Enable ip forwarding & firewall hardening rules
 sed -i -e "s/net.ipv4.ip_forward.*/net.ipv4.ip_forward\ =\ 1/g" /etc/sysctl.conf
 cat ./Configs/iptables-config >/etc/sysconfig/iptables-config
+
+touch /etc/sysconfig/ip6tables
+chkconfig ip6tables on
+/etc/init.d/ip6tables start
+ip6tables -P INPUT DROP
+ip6tables -P OUTPUT DROP
+ip6tables -P FORWARD DROP
+/etc/init.d/ip6tables save
 
 touch /etc/sysconfig/iptables
 chkconfig iptables on
