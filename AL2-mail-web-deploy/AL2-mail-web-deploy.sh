@@ -1,17 +1,16 @@
 #!/bin/bash
 # AWS Mail Server Setup on Amazon Linux 2
 
-HOSTNAME=example-server
-DOMAIN=example.com
-SUBDOMAINS="sub1 sub2 sub3" # Leave this blank if no subdomains are required
-WEBMAILSUB="sub1" # Choose one of the above subdomains that will handle webmail. leave blank if a subdomain isn't being used for the rainloop frontend
-USERS="user1 user2 user3 user4 user5"
-SSHUSERS="user1 user3" # List of the above users allowed to SSH to the server
-SUDOERS="user1 user4" # List of users to become sudoers
+# FQDN of the server
+domain="example.com"
+# Leave this blank if no subdomains are required
+subdomains="sub1 sub2 sub3"
+# Choose one of the above subdomains that will handle webmail. leave blank and a default value of "html" will be used
+webmailsub="sub1"
 
 # Install packages
-NGINX=$(amazon-linux-extras list | grep nginx | awk -F ' ' '{print $2}')
-amazon-linux-extras install "$NGINX" -y
+nginx=$(amazon-linux-extras list | grep nginx | awk -F ' ' '{print $2}')
+amazon-linux-extras install "$nginx" -y
 
 curl http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -o /tmp/epel-release-latest-7.noarch.rpm
 yum install /tmp/epel-release-latest-7.noarch.rpm -y
@@ -30,47 +29,16 @@ yum install     certbot \
                 whois \
                 -y
 
-# Create swap
-dd if=/dev/zero of=/mnt/swapfile bs=1M count=2048
-chown root:root /mnt/swapfile
-chmod 600 /mnt/swapfile
-mkswap /mnt/swapfile
-swapon /mnt/swapfile
-echo "/mnt/swapfile swap swap defaults 0 0" >> /etc/fstab
-swapon -a
-
-# Make /tmp temp filesystem
-echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0" >> /etc/fstab
-
 # Generate Diffie Hellman
 openssl dhparam -out /etc/ssl/dhparams.pem 4096
-
-# Set hostname
-echo "$HOSTNAME" > /etc/hostname
-hostname $HOSTNAME
 
 # Set aliases
 cat ./Configs/aliases >/etc/aliases
 newaliases
 
-# Configure SSH
-cat ./Configs/sshd_config >/etc/ssh/sshd_config
-sed -i -e "s/\$SSHUSERS/""$SSHUSERS""/g"
-systemctl reload sshd
-
-# Configure .bashrc
-cat ./Configs/root_bashrc >>/root/.bashrc
-cat ./Configs/user_bashrc >/etc/skel/.bashrc
-cat ./Configs/user_bashrc >/home/ec2-user/.bashrc
-
 # Make skel mail directories & insert sieve script
 mkdir -p /etc/skel/Maildir/{cur,new,tmp}
 cat ./Configs/dovecot-sieve >/etc/skel/.dovecot-sieve
-
-# Optimise motd
-update-motd --disable
-cat ./Configs/motd >/etc/motd
-sed -i -e "s/\$DOMAIN/""$DOMAIN""/g"
 
 # Configure dnsmasq
 cat ./Configs/dnsmasq.conf >/etc/dnsmasq.conf
@@ -123,10 +91,10 @@ echo "OPTIONS="--unix=/var/spool/postfix/postgrey --delay=60"" >/etc/sysconfig/p
 cat ./Configs/opendkim.conf >/etc/opendkim.conf
 cat ./Configs/opendmarc.conf >/etc/opendmarc.conf
 cat ./Configs/TrustedHosts >/etc/opendkim/TrustedHosts
-echo "mail._domainkey.$DOMAIN $DOMAIN:mail:/etc/opendkim/keys/$DOMAIN/mail.private" >/etc/opendkim/KeyTable
-echo "*@$DOMAIN mail._domainkey.$DOMAIN" >/etc/opendkim/SigningTable
-mkdir -p /etc/opendkim/keys/$DOMAIN
-opendkim-genkey -D /etc/opendkim/keys/$DOMAIN/ -s mail -d $DOMAIN # mail.txt will need to be entered into your domain configuration
+echo "mail._domainkey.$domain $domain:mail:/etc/opendkim/keys/$domain/mail.private" >/etc/opendkim/KeyTable
+echo "*@$domain mail._domainkey.$domain" >/etc/opendkim/SigningTable
+mkdir -p /etc/opendkim/keys/$domain
+opendkim-genkey -D /etc/opendkim/keys/$domain/ -s mail -d $domain # mail.txt will need to be entered into your domain configuration
 chown -R opendkim:opendkim /etc/opendkim/keys/
 chmod 0650 /etc/opendkim
 chmod 0650 /etc/opendkim/TrustedHosts
@@ -143,16 +111,16 @@ cat ./Configs/jail.local >/etc/fail2ban/jail.local
 # Configure nginx
 cat ./Configs/nginx.conf >/etc/nginx/nginx.conf
 mkdir -p /etc/nginx/sites
-cat ./Configs/nginx-pre.conf >/etc/nginx/sites/$DOMAIN.conf
-sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/"$DOMAIN".conf
+cat ./Configs/nginx-pre.conf >/etc/nginx/sites/$domain.conf
+sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/"$domain".conf
 
-if [ -z "$SUBDOMAINS" ]; then
+if [ -z "$subdomains" ]; then
     :
 else
-    for SUB in $SUBDOMAINS ; do
-        cat ./Configs/nginx-pre.conf >/etc/nginx/sites/"$SUB"."$DOMAIN".conf
-        sed -i -e "s/\$DOMAIN/""$SUB"".""$DOMAIN""/g" /etc/nginx/sites/"$SUB"."$DOMAIN".conf
-        sed -i -e "s/html/""$SUB""/g" /etc/nginx/sites/"$SUB"."$DOMAIN".conf
+    for sub in $subdomains ; do
+        cat ./Configs/nginx-pre.conf >/etc/nginx/sites/"$sub"."$domain".conf
+        sed -i -e "s/\$domain/""$sub"".""$domain""/g" /etc/nginx/sites/"$sub"."$domain".conf
+        sed -i -e "s/html/""$sub""/g" /etc/nginx/sites/"$sub"."$domain".conf
     done;
 fi
 
@@ -160,16 +128,16 @@ fi
 sed -i -e "s/nameserver.*/nameserver\ 208.67.220.220/g" /etc/resolv.conf
 mkdir -p /var/www/html/.well-known
 systemctl enable nginx --now
-certbot certonly --register-unsafely-without-email --agree-tos --webroot -w /var/www/html/ -d $DOMAIN
+certbot certonly --register-unsafely-without-email --agree-tos --webroot -w /var/www/html/ -d $domain
 cat ./Configs/index.html >/var/www/html/index.html
 
-if [ -z "$SUBDOMAINS" ]; then
+if [ -z "$subdomains" ]; then
     :
 else
-    for SUB in $SUBDOMAINS ; do
-        mkdir -p /var/www/"$SUB"/.well-known
-        certbot certonly --register-unsafely-without-email --agree-tos --webroot -w /var/www/"$SUB"/ -d "$SUB"."$DOMAIN"
-        cat ./Configs/index.html >/var/www/"$SUB"/index.html
+    for sub in $subdomains ; do
+        mkdir -p /var/www/"$sub"/.well-known
+        certbot certonly --register-unsafely-without-email --agree-tos --webroot -w /var/www/"$sub"/ -d "$sub"."$domain"
+        cat ./Configs/index.html >/var/www/"$sub"/index.html
     done;
 fi
 
@@ -177,21 +145,22 @@ cat ./Configs/certrenew.sh > /etc/cron.daily/certrenew.sh
 chmod +x /etc/cron.daily/certrenew.sh
 
 # Complete nginx setup
-cat ./Configs/nginx-post.conf >/etc/nginx/sites/$DOMAIN.conf
-sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/"$DOMAIN".conf
+cat ./Configs/nginx-post.conf >/etc/nginx/sites/$domain.conf
+sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/"$domain".conf
 
-if [ -z "$SUBDOMAINS" ]; then
+if [ -z "$subdomains" ]; then
     :
 else
-    for SUB in $SUBDOMAINS ; do
-        cat ./Configs/nginx-post.conf >/etc/nginx/sites/"$SUB"."$DOMAIN".conf
-        sed -i -e "s/\$DOMAIN/""$SUB"".""$DOMAIN""/g" /etc/nginx/sites/"$SUB"."$DOMAIN".conf
-        sed -i -e "s/html/""$SUB""/g" /etc/nginx/sites/"$SUB"."$DOMAIN".conf
+    for sub in $subdomains ; do
+        cat ./Configs/nginx-post.conf >/etc/nginx/sites/"$sub"."$domain".conf
+        sed -i -e "s/\$domain/""$sub"".""$domain""/g \
+                  s/html/""$sub""/g" \
+                  /etc/nginx/sites/"$sub"."$domain".conf
     done;
 fi
 
-# Populate all configs with $DOMAIN
-sed -i -e "s/\$DOMAIN/""$DOMAIN""/g"    /etc/motd \
+# Populate all configs with $domain
+sed -i -e "s/\$domain/""$domain""/g"    /etc/motd \
                                         /etc/dovecot/conf.d/10-ssl.conf \
                                         /etc/dovecot/conf.d/20-lmtp.conf \
                                         /etc/postfix/main.cf \
@@ -207,34 +176,22 @@ postmap /etc/postfix/header_checks
 
 # rainloop webmail server
 curl https://www.rainloop.net/repository/webmail/rainloop-latest.zip -o /tmp/rainloop-latest.zip
-if [ -z "$WEBMAILSUB" ]; then
-    WEBMAILSUB="html"
+if [ -z "$webmailsub" ]; then
+    webmailsub="html"
 else
     :
 fi
-unzip -q /tmp/rainloop-latest.zip -d /var/www/$WEBMAILSUB
-find /var/www/$WEBMAILSUB/. -type d -exec chmod 755 {} \;
-find /var/www/$WEBMAILSUB/. -type f -exec chmod 644 {} \;
-chown -R nginx:nginx /var/www/$WEBMAILSUB
-sed -i -e "s/index.html/index.php/g" /etc/nginx/sites/"$WEBMAILSUB"."$DOMAIN".conf
+unzip -q /tmp/rainloop-latest.zip -d /var/www/$webmailsub
+find /var/www/$webmailsub/. -type d -exec chmod 755 {} \;
+find /var/www/$webmailsub/. -type f -exec chmod 644 {} \;
+chown -R nginx:nginx /var/www/$webmailsub
+sed -i -e "s/index.html/index.php/g" /etc/nginx/sites/"$webmailsub"."$domain".conf
 mysql -u root < ./Configs/rainloop.sql
 
-# Create users & passwords
-for NAME in $USERS ; do
-    useradd -m "$NAME"
-    echo "Password for $NAME"
-    passwd "$NAME"
-done
-
-# Add sudoers with password required
-for NAME in $SUDOERS ; do
-    echo "$NAME ALL=(ALL) ALL" >/etc/sudoers.d/"$NAME"
-done
-
 # Open necessary ports for Firewalld
-PORTS="22 25 80 143 443 465 993"
-for PORT in $PORTS; do
-    firewall-cmd --permanent --zone=public --add-port="$PORT"/tcp
+ports="22 25 80 143 443 465 993"
+for port in $ports; do
+    firewall-cmd --permanent --zone=public --add-port="$port"/tcp
 done
 
 # Enable EVERYTHING
@@ -254,4 +211,4 @@ systemctl enable    clamsmtpd \
 rm -rf /tmp/*
 
 printf "Setup complete.\n"
-printf "\033[0;31m\x1b[5m**REBOOT THE EC2 INSTANCE FROM THE AWS CONSOLE\!**\x1b[25m\n"
+printf "\033[0;31m\x1b[5m**REBOOT THIS INSTANCE FROM THE AWS CONSOLE\!**\x1b[25m\n"

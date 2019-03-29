@@ -1,6 +1,6 @@
-myhostname             = $DOMAIN
-mydomain               = $DOMAIN
-myorigin               = $DOMAIN
+myhostname             = $domain
+mydomain               = $domain
+myorigin               = $domain
 mydestination          = $myhostname, localhost.$mydomain, localhost, $mydomain
 mynetworks             = 127.0.0.0/8
 mynetworks_style       = host
@@ -41,9 +41,9 @@ html_directory         = no
 biff                   = no
 readme_directory       = no
 
-smtpd_tls_cert_file     = /etc/letsencrypt/live/$DOMAIN/cert.pem
-smtpd_tls_key_file      = /etc/letsencrypt/live/$DOMAIN/privkey.pem
-smtpd_tls_CAfile        = /etc/letsencrypt/live/$DOMAIN/chain.pem
+smtpd_tls_cert_file     = /etc/letsencrypt/live/$domain/cert.pem
+smtpd_tls_key_file      = /etc/letsencrypt/live/$domain/privkey.pem
+smtpd_tls_CAfile        = /etc/letsencrypt/live/$domain/chain.pem
 
 smtpd_use_tls          = yes
 smtpd_tls_protocols    = !SSLv2, !SSLv3
