@@ -172,3 +172,6 @@ chkconfig nzbdrone on
 /etc/init.d/nginx restart
 /etc/init.d/transmission-daemon start
 /etc/init.d/nzbdrone start
+
+printf "Setup complete.\n"
+printf "\033[0;31m\x1b[5m**REBOOT THIS INSTANCE FROM THE AWS CONSOLE\!**\x1b[25m\n"
