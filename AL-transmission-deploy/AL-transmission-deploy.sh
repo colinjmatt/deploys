@@ -103,6 +103,19 @@ chmod 644 /etc/sysconfig/nzbdrone
 chkconfig --add nzbdrone
 chkconfig nzbdrone on
 
+# Jackett
+(
+cd /tmp || return
+wget https://github.com/Jackett/Jackett/releases/download/v0.11.150/Jackett.Binaries.LinuxAMDx64.tar.gz
+tar zxf Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt/
+)
+mv /opt/Jackett /opt/jackett
+groupadd -r jackett
+useradd -M -r -g jackett -d /var/lib/jackett jackett
+mkdir -p /var/lib/jackett/Jackett
+cat ./Configs/ServerConfig.json  >/var/lib/jackett/Jackett/ServerConfig.json
+chown -R jackett:jackett /var/lib/jackett /opt/jackett
+
 # Remove no longer needed packacges
 yum remove gcc-c++ gcc gettext -y
 
