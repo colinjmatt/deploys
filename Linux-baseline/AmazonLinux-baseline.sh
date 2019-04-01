@@ -1,5 +1,7 @@
 #!/bin/bash
-# AWS EC2/Lightsail instance baseline setup
+# Linux instance baseline setup for init.d or systemd based Linux distributions
+# Compatible with CentOS 6
+
 # Name of the server
 hostname="example-server"
 # FQDN of the server
@@ -30,7 +32,7 @@ echo "$hostname" > /etc/hostname
 hostname $hostname
 
 # Configure SSH
-cat ./Configs/sshd_config >/etc/ssh/sshd_config
+cat ./sshd_config >/etc/ssh/sshd_config
 sed -i -e "s/\$sshusers/""$sshusers""/g" /etc/ssh/sshd_config
 /etc/init.d/sshd reload
 
@@ -40,16 +42,20 @@ iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 /etc/init.d/iptables save
 
 # Configure .bashrc
-cat ./Configs/root_bashrc >/root/.bashrc
-cat ./Configs/user_bashrc >/etc/skel/.bashrc
-cat ./Configs/user_bashrc >/home/ec2-user/.bashrc
+cat ./root_bashrc >/root/.bashrc
+cat ./user_bashrc >/etc/skel/.bashrc
+for dir in $(ls -d /home/*)
+do
+    cat ./user_bashrc >${dir}/.bashrc
+done
 
 # Optimise motd if Amazon Linux
 if uname -r | grep amzn; then
     update-motd --disable
-    cat ./Configs/motd >/etc/motd
+    cat ./motd >/etc/motd
     sed -i -e "s/\$domain/""$domain""/g" /etc/motd
 fi
+
 # Create users & passwords
 for name in $users ; do
     useradd -m "$name"

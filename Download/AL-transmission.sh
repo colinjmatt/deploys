@@ -16,7 +16,7 @@ downincomplete="/downloads/incomplete"
 users="flexget nzbdrone jackett"
 for name in $users ; do
     groupadd -r "$name"
-    useradd -M -r -g "$name" -d /var/lib/"$name" "$name"
+    useradd -m -r -g "$name" -d /var/lib/"$name" "$name"
     chown -R "$name":"$name" /var/lib/"$name"
 done
 
