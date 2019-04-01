@@ -1,5 +1,5 @@
-# AWS-Deploys
+# Deploys
 
-A collection of (mostly) automated deployments of products compatible AWS EC2/Lightsail instances
+A collection of (mostly) automated deployments of products compatible with Linux.
 
-The compatible OS will be listed in the name of the sub folder and the deploy script
+The distribution used is specified in the title of each deployment.
