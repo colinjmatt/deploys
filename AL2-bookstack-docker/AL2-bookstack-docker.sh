@@ -1,6 +1,7 @@
 #!/bin/bash
+# Bookstack docker deployment using Amazon Linux 2
 # Set the domain name to be used BEFORE running this script
-DOMAIN="example.com"
+domain="example.com"
 
 # Check if this block has already been done
 if [ -f /tmp/bookstack-install ]; then
@@ -10,8 +11,8 @@ else
 	# Install required packages
 	sudo yum install docker git
 
-	NGINX=$(amazon-linux-extras list | grep nginx | awk -F ' ' '{print $2}')
-	sudo amazon-linux-extras install "$NGINX" -y
+	nginx=$(amazon-linux-extras list | grep nginx | awk -F ' ' '{print $2}')
+	sudo amazon-linux-extras install "$nginx" -y
 
 	cd /tmp || exit
 	curl -O http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
@@ -47,15 +48,15 @@ sudo mkdir -p /var/www/docker-bookstack/.well-known
 sudo mkdir -p /etc/nginx/sites
 sudo cp ./Configs/nginx.conf /etc/nginx/nginx.conf
 sudo cp ./Configs/docker-bookstack-pre-certbot.conf /etc/nginx/sites/docker-bookstack.conf
-sudo sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/docker-bookstack.conf
+sudo sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/docker-bookstack.conf
 
 # Start nginx
 sudo systemctl enable nginx --now
 
 # Configure certbot
-sudo certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /var/www/docker-bookstack -d "$DOMAIN"
+sudo certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /var/www/docker-bookstack -d "$domain"
 
 # Configure nginx for SSL with port 80 redirect and reload
 sudo cp ./Configs/docker-bookstack-post-certbot.conf /etc/nginx/sites/docker-bookstack.conf
-sudo sed -i -e "s/\$DOMAIN/""$DOMAIN""/g" /etc/nginx/sites/docker-bookstack.conf
+sudo sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/docker-bookstack.conf
 sudo systemctl reload nginx
