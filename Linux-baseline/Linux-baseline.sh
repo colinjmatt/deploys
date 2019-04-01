@@ -44,11 +44,12 @@ cat ./Configs/root_bashrc >/root/.bashrc
 cat ./Configs/user_bashrc >/etc/skel/.bashrc
 cat ./Configs/user_bashrc >/home/ec2-user/.bashrc
 
-# Optimise motd
-update-motd --disable
-cat ./Configs/motd >/etc/motd
-sed -i -e "s/\$domain/""$domain""/g" /etc/motd
-
+# Optimise motd if Amazon Linux
+if uname -r | grep amzn; then
+    update-motd --disable
+    cat ./Configs/motd >/etc/motd
+    sed -i -e "s/\$domain/""$domain""/g" /etc/motd
+fi
 # Create users & passwords
 for name in $users ; do
     useradd -m "$name"
