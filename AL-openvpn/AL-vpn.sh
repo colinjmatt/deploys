@@ -1,5 +1,5 @@
 #!/bin/bash
-# AWS Lightsail OpenVPN Server Setup on Amazon Linux
+# OpenVPN server deployment using Amazon Linux
 
 # FQDN of the server
 domain="example.com"

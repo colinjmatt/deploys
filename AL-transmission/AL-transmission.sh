@@ -1,5 +1,5 @@
 #!/bin/bash
-# AWS Lightsail Transmission Server Setup on Amazon Linux
+# Transmission deployment using Amazon Linux
 
 # FQDN of the server
 domain="example.com"

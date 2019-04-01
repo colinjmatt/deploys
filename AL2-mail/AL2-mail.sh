@@ -1,5 +1,5 @@
 #!/bin/bash
-# AWS Mail Server Setup on Amazon Linux 2
+# Mail server deployment using Amazon Linux 2
 
 # FQDN of the server
 domain="example.com"
