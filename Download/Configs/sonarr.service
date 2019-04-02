@@ -1,0 +1,10 @@
+[Unit]
+Description=Sonarr
+
+[Service]
+User=sonarr
+Group=sonarr
+ExecStart=/usr/bin/mono /opt/nzbdrone/NzbDrone.exe
+
+[Install]
+WantedBy=multi-user.target

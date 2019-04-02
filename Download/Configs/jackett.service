@@ -1,0 +1,10 @@
+[Unit]
+Description=Jackett
+
+[Service]
+User=jackett
+Group=jackett
+ExecStart=/opt/jackett/jackett
+
+[Install]
+WantedBy=multi-user.target

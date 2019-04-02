@@ -1,0 +1,10 @@
+[Unit]
+Description=Radarr
+
+[Service]
+User=radarr
+Group=radarr
+ExecStart=/usr/bin/mono /opt/radarr/Radarr.exe
+
+[Install]
+WantedBy=multi-user.target
