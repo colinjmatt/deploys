@@ -24,7 +24,8 @@ done
 sed -i -e "s/dns-nameservers.*/dns-nameservers\ \ 1.1.1.1\ 1.0.0.1/g" /etc/network/interfaces
 
 # Add firewall rules
-ports="80 443 8989 9091 9117 55369"
+#ports="80 443 7878 8989 9091 9117 55369" # internal ports don't need opening
+ports="80 443 9091 55369"
 for port in $ports; do
     firewall-cmd --permanent --zone=public --add-port="$port"/tcp
 done
