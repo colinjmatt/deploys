@@ -40,11 +40,17 @@ systemctl reload sshd
 # Configure SSH firewall rules
 systemctl start firewalld
 firewall-cmd --permanent --zone=public --change-interface=eth0
+firewall-cmd --permanent --zone=public --change-interface=eth0
 firewall-cmd --permanent --zone=public --add-port=22/tcp
+firewall-cmd --reload
 
 # Configure .bashrc
 cat ./root_bashrc >/root/.bashrc
 cat ./user_bashrc >/etc/skel/.bashrc
+for dir in $(ls -d /home/*)
+do
+    cat ./user_bashrc >${dir}/.bashrc
+done
 
 # Optimise motd if Amazon Linux
 if uname -r | grep amzn; then
