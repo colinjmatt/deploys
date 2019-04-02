@@ -73,6 +73,7 @@ tar zxf /tmp/NzbDrone.master.tar.gz -C /opt/ )
 mv /opt/NzbDrone /opt/nzbdrone
 chown -R nzbdrone:nzbdrone /opt/nzbdrone
 echo "@reboot sonarr mono /opt/nzbdrone/NzbDrone.exe" >/etc/cron.d/sonarr
+mkdir -p /var/lib/sonarr/.config/NzbDrone
 echo -e "<Config>\n  <UrlBase>/sonarr</UrlBase>\n</Config>" >/var/lib/sonarr/.config/NzbDrone/config.xml
 
 # Install and configure radarr
@@ -82,6 +83,7 @@ tar -zxf Radarr.develop.0.2.0.1293.linux.tar.gz -C /opt/ )
 mv /opt/Radarr /opt/radarr
 chown -R radarr:radarr /opt/radarr
 echo "@reboot radarr mono /opt/radarr/Radarr.exe" >/etc/cron.d/radarr
+mkdir -p /var/lib/radarr/.config/Radarr
 echo -e "<Config>\n  <UrlBase>/radarr</UrlBase>\n</Config>" >/var/lib/radarr/.config/Radarr/config.xml
 
 # Jackett
@@ -91,6 +93,7 @@ tar zxf Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt/ )
 mv /opt/Jackett /opt/jackett
 chown -R jackett:jackett /opt/jackett
 echo "@reboot jackett /opt/jackett/jackett" >/etc/cron.d/jackett
+mkdir -p /var/lib/jackett/.config/Jackett
 echo -e "{\n  \"BasePathOverride\": \"/jackett\"\n}" >/var/lib/jackett/.config/Jackett/ServerConfig.json
 
 # Start services
