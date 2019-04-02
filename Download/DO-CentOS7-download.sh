@@ -3,14 +3,12 @@
 
 # FQDN of the server
 domain="example.com"
-# List of users to become sudoers
-rssfeed="http://some-rss-feed"
 # Password for transmission rpc
 transmissionpass="password"
-# Location of completed downloads
-downcomplete="/downloads/complete"
-#Location of incomplete downloads
-downincomplete="/downloads/incomplete"
+# Location of completed downloads - ALL SLASHES MUST BE ESCAPED!
+downcomplete="\/downloads\/complete"
+#Location of incomplete downloads - ALL SLASHES MUST BE ESCAPED!
+downincomplete="\/downloads\/incomplete"
 
 # Create service users
 users="sonarr radarr jackett"
@@ -29,32 +27,38 @@ ports="80 443 9091 55369"
 for port in $ports; do
     firewall-cmd --permanent --zone=public --add-port="$port"/tcp
 done
+firewall-cmd --reload
+
+# Configure selinux
+setsebool -P httpd_can_network_connect 1
 
 # Enable epel
 yum install wget -y
 ( cd /tmp || return
 wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-yum install /tmp/epel-release-latest-7.noarch.rpm -y
-
-# Install & configure transmission-daemon
-yum install transmission-daemon -y
-cat ./Configs/settings.json >/var/lib/tansmission-daemon/settings.json
-sed -i -e " s/\$downcomplete/""$downcomplete""/g \
-            s/\$downincomplete/""$downincomplete""/g \
-            s/\$transmissionpass/""$transmissionpass""/g" \
-            /var/lib/tansmission-daemon/settings.json
+yum install /tmp/epel-release-latest-7.noarch.rpm -y )
 
 # Install & configure nginx with certbot certs
 yum install nginx certbot -y
-mkdir -p /var/www/nzbdrone/.well-known
+mkdir -p /usr/share/nginx/html/.well-known
 mkdir -p /etc/nginx/sites
-cp ./Configs/nginx.conf /etc/nginx/nginx.conf
-sudo cp ./Configs/pre-certbot.conf /etc/nginx/sites/nzbdrone.conf
-sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/
+cat ./Configs/nginx.conf >/etc/nginx/nginx.conf
+cat ./Configs/pre-certbot.conf >/etc/nginx/sites/download.conf
+sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/download.conf
 systemctl enable nginx --now
-certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /var/www/nzbdrone -d "$domain" --debug
-cp ./Configs/post-certbot.conf /etc/nginx/sites/nzbdrone.conf
-sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/nzbdrone.conf
+certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /usr/share/nginx/html -d "$domain"
+cat ./Configs/post-certbot.conf >/etc/nginx/sites/download.conf
+sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/download.conf
+
+# Install & configure transmission-daemon
+yum install transmission-daemon -y
+mkdir -p /var/lib/transmission/.config/transmission-daemon/
+cat ./Configs/settings.json >/var/lib/transmission/.config/transmission-daemon/settings.json
+sed -i -e " s/\$downcomplete/""$downcomplete""/g
+            s/\$downincomplete/""$downincomplete""/g
+            s/\$transmissionpass/""$transmissionpass""/g" \
+            /var/lib/transmission/.config/tranmission-daemon/settings.json
+chown -R transmission:transmission /var/lib/transmission/
 
 # Get required packages
 yum install mono-core mono-locale-extras mediainfo libicu libcurl-devel bzip2 -y
@@ -62,36 +66,39 @@ yum install mono-core mono-locale-extras mediainfo libicu libcurl-devel bzip2 -y
 # Install & configure sonarr
 ( cd /tmp || return
 wget http://download.sonarr.tv/v2/master/mono/NzbDrone.master.tar.gz
-tar zxf /tmp/NzbDrone.master.tar.gz -C /opt/
-mv /opt/NzbDrone /opt/nzbdrone )
-chown -R sonarr:sonarr /opt/nzbdrone
+tar zxf /tmp/NzbDrone.master.tar.gz -C /opt/ )
+mv /opt/NzbDrone /opt/nzbdrone
 cat ./Configs/sonarr.service >/etc/systemd/system/sonarr.service
+mkdir -p /var/lib/sonarr/.config/NzbDrone/
 echo -e "<Config>\n  <UrlBase>/sonarr</UrlBase>\n</Config>" >/var/lib/sonarr/.config/NzbDrone/config.xml
-
+chown -R sonarr:sonarr /opt/nzbdrone /var/lib/sonarr
 
 # Install and configure radarr
 ( cd /tmp || return
 wget https://github.com/Radarr/Radarr/releases/download/v0.2.0.1293/Radarr.develop.0.2.0.1293.linux.tar.gz
 tar -zxf Radarr.develop.0.2.0.1293.linux.tar.gz -C /opt/ )
 mv /opt/Radarr /opt/radarr
-chown -R radarr:radarr /opt/radarr
+cat ./Configs/radarr.service >/etc/systemd/system/radarr.service
+mkdir -p /var/lib/radarr/.config/Radarr
 echo -e "<Config>\n  <UrlBase>/radarr</UrlBase>\n</Config>" >/var/lib/radarr/.config/Radarr/config.xml
+chown -R radarr:radarr /opt/radarr /var/lib/radarr
 
 # Install & configure jackett
 ( cd /tmp || return
 wget https://github.com/Jackett/Jackett/releases/download/v0.11.150/Jackett.Binaries.LinuxAMDx64.tar.gz
 tar zxf Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt/ )
 mv /opt/Jackett /opt/jackett
-chown -R jackett:jackett /opt/jackett
 cat ./Configs/jackett.service >/etc/systemd/system/jackett.service
+mkdir -p /var/lib/jackett/.config/Jackett
 echo -e "{\n  \"BasePathOverride\": \"/jackett\"\n}" >/var/lib/jackett/.config/Jackett/ServerConfig.json
+chown -R jackett:jackett /opt/jackett /var/lib/jackett
 
 # Start services
 systemctl restart network \
                   nginx
 systemctl enable  transmission-daemon \
-                  nzbdrone \
+                  sonarr \
                   radarr \
-                  jackett --now \
+                  jackett --now
 
 printf "Setup complete.\n"
