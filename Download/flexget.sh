@@ -15,7 +15,7 @@ if [[ -d /etc/systemd ]]; then
   pip install --upgrade setuptools
   pip install flexget transmissionrpc
   mkdir -p /etc/flexget
-  cat ./Configs/config.yml >/var/lib/flexget/config.yml
+  cat ./Configs/flexget-config.yml >/var/lib/flexget/config.yml
   sed -i -e " s/\$rssfeed/""$rssfeed""/g \
               s/\$transmissionpass/""$transmissionpass""/g" \
               /var/lib/flexget/config.yml
@@ -28,7 +28,7 @@ else
   pip install --upgrade setuptools
   pip install flexget transmissionrpc
   mkdir -p /etc/flexget
-  cat ./Configs/config.yml >/var/lib/flexget/config.yml
+  cat ./Configs/flexget-config.yml >/var/lib/flexget/config.yml
   sed -i -e " s/\$rssfeed/""$rssfeed""/g \
               s/\$transmissionpass/""$transmissionpass""/g" \
               /var/lib/flexget/config.yml
