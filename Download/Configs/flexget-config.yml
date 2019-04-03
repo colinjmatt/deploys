@@ -1,0 +1,15 @@
+schedules:
+  - tasks: '*'
+    interval:
+      hours: 1
+
+tasks:
+  download-rss:
+    rss: $rssfeed
+    all_series: yes
+    proper_movies: yes
+    transmission:
+      host: localhost
+      port: 9091
+      username: transmission-daemon
+      password: $transmissionpass
