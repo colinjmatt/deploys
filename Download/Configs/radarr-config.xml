@@ -1,0 +1,13 @@
+<Config>
+  <UrlBase>/radarr</UrlBase>
+  <LogLevel>Info</LogLevel>
+  <Port>7878</Port>
+  <BindAddress>*</BindAddress>
+  <SslPort>9898</SslPort>
+  <EnableSsl>False</EnableSsl>
+  <AuthenticationMethod>Forms</AuthenticationMethod>
+  <Branch>develop</Branch>
+  <LaunchBrowser>True</LaunchBrowser>
+  <SslCertHash></SslCertHash>
+  <UpdateMechanism>BuiltIn</UpdateMechanism>
+</Config>
