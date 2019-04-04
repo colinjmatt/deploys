@@ -10,6 +10,12 @@ downcomplete="\/downloads\/complete"
 #Location of incomplete downloads - ALL SLASHES MUST BE ESCAPED!
 downincomplete="\/downloads\/incomplete"
 
+# Create download directories
+mkdir -p $downcomplete
+chmod -R 0777 $downcomplete
+mkdir -p $downincomplete
+chmod -R 0777 $downincomplete
+
 # Create service users
 users="sonarr radarr jackett"
 for name in $users ; do
@@ -25,7 +31,7 @@ sed -i -e "s/dns-nameservers.*/dns-nameservers\ \ 1.1.1.1\ 1.0.0.1/g" /etc/netwo
 #ports="80 443 7878 8989 9091 9117 55369" # internal ports don't need opening
 ports="80 443 9091 55369"
 for port in $ports; do
-    firewall-cmd --permanent --zone=public --add-port="$port"/tcp
+    firewall-cmd --permanent --zone=drop --add-port="$port"/tcp
 done
 firewall-cmd --reload
 
@@ -49,6 +55,7 @@ systemctl enable nginx --now
 certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /usr/share/nginx/html -d "$domain"
 cat ./Configs/post-certbot.conf >/etc/nginx/sites/download.conf
 sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/download.conf
+echo "@daily root /usr/local/bin/certbot-auto" >/etc/cron.d/certbot
 
 # Install & configure transmission-daemon
 yum install transmission-daemon -y
@@ -57,7 +64,7 @@ cat ./Configs/settings.json >/var/lib/transmission/.config/transmission-daemon/s
 sed -i -e " s/\$downcomplete/""$downcomplete""/g
             s/\$downincomplete/""$downincomplete""/g
             s/\$transmissionpass/""$transmissionpass""/g" \
-            /var/lib/transmission/.config/tranmission-daemon/settings.json
+            /var/lib/transmission/.config/transmission-daemon/settings.json
 chown -R transmission:transmission /var/lib/transmission/
 
 # Get required packages
