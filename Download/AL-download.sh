@@ -10,6 +10,12 @@ downcomplete="/downloads/complete"
 #Location of incomplete downloads
 downincomplete="/downloads/incomplete"
 
+# Create download directories
+mkdir -p $downcomplete
+chmod -R 0777 $downcomplete
+mkdir -p $downincomplete
+chmod -R 0777 $downincomplete
+
 # Create service users
 users="sonarr radarr jackett"
 for name in $users ; do
@@ -62,6 +68,7 @@ chmod a+x /usr/local/bin/certbot-auto
 /usr/local/bin/certbot-auto certonly --agree-tos --register-unsafely-without-email --webroot -w /var/www/nzbdrone -d "$domain" --debug
 cp ./Configs/post-certbot.conf /etc/nginx/sites/nzbdrone.conf
 sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/nzbdrone.conf
+echo "@daily root /usr/local/bin/certbot-auto" >/etc/cron.d/certbot
 
 # Get required packages
 yum install mono-core mono-devel mono-locale-extras mediainfo libzen libmediainfo -y
