@@ -5,6 +5,8 @@ Description=Radarr
 User=radarr
 Group=radarr
 ExecStart=/usr/bin/mono /opt/radarr/Radarr.exe
+Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target

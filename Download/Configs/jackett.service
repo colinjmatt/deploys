@@ -5,6 +5,8 @@ Description=Jackett
 User=jackett
 Group=jackett
 ExecStart=/opt/jackett/jackett
+Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target

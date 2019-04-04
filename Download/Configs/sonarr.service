@@ -5,6 +5,8 @@ Description=Sonarr
 User=sonarr
 Group=sonarr
 ExecStart=/usr/bin/mono /opt/nzbdrone/NzbDrone.exe
+Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
