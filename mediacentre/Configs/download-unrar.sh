@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /Media/Downloads/Complete/"$TR_TORRENT_DIR"/ || return
+cd "$TR_TORRENT_DIR" || return
 for archive in ./*.rar
 do
   if [[ -e "$archive" ]]; then
