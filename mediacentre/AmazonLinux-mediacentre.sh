@@ -82,6 +82,8 @@ chown -R nzbdrone:nzbdrone /opt/nzbdrone
 echo "@reboot sonarr mono /opt/nzbdrone/NzbDrone.exe" >/etc/cron.d/sonarr
 mkdir -p /var/lib/sonarr/.config/NzbDrone
 echo -e "<Config>\n  <UrlBase>/sonarr</UrlBase>\n</Config>" >/var/lib/sonarr/.config/NzbDrone/config.xml
+cat ./Configs/download-unrar.sh >/usr/local/bin/download-unrar.sh
+chmod +x /usr/local/bin/download-unrar.sh
 
 # Install and configure radarr
 ( cd /tmp || return

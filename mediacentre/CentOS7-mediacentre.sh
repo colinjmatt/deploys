@@ -60,7 +60,7 @@ systemctl enable nginx --now
 certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /usr/share/nginx/html -d "$domain"
 cat ./Configs/post-certbot.conf >/etc/nginx/sites/download.conf
 sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/download.conf
-echo "@daily root /usr/local/bin/certbot-auto" >/etc/cron.d/certbot
+echo "@daily root certbot renew 2>&1" >/etc/cron.d/certbot
 
 # Install & configure transmission-daemon
 yum install transmission-daemon -y
@@ -71,6 +71,8 @@ sed -i -e " s/\$downcomplete/""$downcomplete""/g
             s/\$transmissionpass/""$transmissionpass""/g" \
             /var/lib/transmission/.config/transmission-daemon/settings.json
 chown -R transmission:transmission /var/lib/transmission/
+cat ./Configs/download-unrar.sh >/usr/local/bin/download-unrar.sh
+chmod +x /usr/local/bin/download-unrar.sh
 
 # Get required packages
 yum install mono-core mono-locale-extras mediainfo libicu libcurl-devel bzip2 -y
