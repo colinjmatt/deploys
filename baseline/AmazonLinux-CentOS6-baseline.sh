@@ -37,8 +37,13 @@ sed -i -e "s/\$sshusers/""$sshusers""/g" /etc/ssh/sshd_config
 /etc/init.d/sshd reload
 
 # Configure SSH firewall rules
+iptables -P INPUT DROP
 iptables -A INPUT -i eth0 -p tcp -s "$sship" --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# Only necessary if you want to alias mail to send to another server/external recipient
+iptables -A INPUT -p tcp -s localhost --dport 25 -j ACCEPT
+
 /etc/init.d/iptables save
 
 # Configure .bashrc
