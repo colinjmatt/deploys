@@ -42,7 +42,12 @@ setsebool -P httpd_can_network_connect 1
 yum install wget -y
 ( cd /tmp || return
 wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-yum install /tmp/epel-release-latest-7.noarch.rpm -y )
+yum install /tmp/epel-release-latest-7.noarch.rpm -y
+
+# Install rar/unrar
+wget  https://rarlab.com/rar/rarlinux-x64-5.7.0.tar.gz
+tar -zxf rarlinux-x64-5.7.0.tar.gz )
+cp /tmp/rar/rar /tmp/rar/unrar /usr/local/bin
 
 # Install & configure nginx with certbot certs
 yum install nginx certbot -y
