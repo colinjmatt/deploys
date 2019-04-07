@@ -60,7 +60,7 @@ systemctl enable nginx --now
 certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /usr/share/nginx/html -d "$domain"
 cat ./Configs/post-certbot.conf >/etc/nginx/sites/download.conf
 sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/download.conf
-echo "@daily root certbot renew 2>&1" >/etc/cron.d/certbot
+echo "@daily root certbot renew >/dev/null" >/etc/cron.d/certbot
 
 # Install & configure transmission-daemon
 yum install transmission-daemon -y
