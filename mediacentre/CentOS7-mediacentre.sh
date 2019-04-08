@@ -77,6 +77,10 @@ chmod +x /usr/local/bin/download-unrar.sh
 # Get required packages
 yum install mono-core mono-locale-extras mediainfo libicu libcurl-devel bzip2 -y
 
+# Possibly needed to get radarr working - 4.6.2 may be causing radarr functionality errors
+#rpm --import "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF"
+#curl https://download.mono-project.com/repo/centos7-stable.repo | tee /etc/yum.repos.d/mono-centos7-stable.repo
+
 # Install & configure sonarr
 ( cd /tmp || return
 wget http://download.sonarr.tv/v2/master/mono/NzbDrone.master.tar.gz
