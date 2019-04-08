@@ -68,7 +68,7 @@ chmod a+x /usr/local/bin/certbot-auto
 /usr/local/bin/certbot-auto certonly --agree-tos --register-unsafely-without-email --webroot -w /var/www/nzbdrone -d "$domain" --debug
 cp ./Configs/post-certbot.conf /etc/nginx/sites/nzbdrone.conf
 sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/nzbdrone.conf
-echo "@daily root /usr/local/bin/certbot-auto >/dev/null" >/etc/cron.d/certbot
+echo "@daily root /usr/local/bin/certbot-auto >/dev/null 2>&1" >/etc/cron.d/certbot
 
 # Get required packages
 yum install mono-core mono-devel mono-locale-extras mediainfo libzen libmediainfo -y
