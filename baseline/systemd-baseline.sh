@@ -1,6 +1,7 @@
 #!/bin/bash
-# Amazon Linux 2 instance baseline setup for init.d or systemd based Linux distributions
-# Compatible with CentOS 7
+# Baseline setup for systemd based Linux distributions
+# Tested for compatibility with: CentOS 7
+#                                Amazon Linux 2
 
 # Name of the server
 hostname="example-server"
@@ -10,11 +11,15 @@ domain="example.com"
 users="user1 user2 user3 user4 user5"
 # List of the above users allowed to SSH to the server
 sshusers="user1 user3"
+# Change if SSH access should be restricted to an IP or IP range
+sship="0.0.0.0/0"
 # List of users to become sudoers
 sudoers="user1 user4"
+# Name of your timezone which can be found in /usr/share/zoneinfo/
+timezone="Europe/London"
 
-# Firwalld is needed
-yum install firewalld -y
+# Packages needed
+yum install firewalld ntp -y
 
 # Create 2GB swapfile
 dd if=/dev/zero of=/mnt/swapfile bs=1M count=2048
@@ -28,12 +33,16 @@ swapon -a
 # Make /tmp temp filesystem
 echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0" >> /etc/fstab
 
+# Set timezone and ntp
+timedatectl set-timezone $timezone
+timedatectl set-ntp true
+
 # Set hostname
 echo "$hostname" > /etc/hostname
 hostname $hostname
 
 # Configure SSH
-cat ./sshd_config >/etc/ssh/sshd_config
+cat ./Configs/sshd_config >/etc/ssh/sshd_config
 sed -i -e "s/\$sshusers/""$sshusers""/g" /etc/ssh/sshd_config
 systemctl reload sshd
 
@@ -46,18 +55,21 @@ firewall-cmd --permanent --zone=drop --add-rich-rule="
   port protocol=\"tcp\" port=\"22\" accept"
 firewall-cmd --reload
 
-# Configure .bashrc
-cat ./root_bashrc >/root/.bashrc
-cat ./user_bashrc >/etc/skel/.bashrc
+# Configure .bashrc & .nanorc
+cat ./Configs/root_bashrc >/root/.bashrc
+cat ./Configs/root_nanorc >/root/.nanorc
+cat ./Configs/user_bashrc >/etc/skel/.bashrc
+cat ./Configs/user_nanorc >/etc/skel/.nanorc
 for dir in $(ls -d /home/*)
 do
-    cat ./user_bashrc >${dir}/.bashrc
+    cat ./Configs/user_bashrc >${dir}/.bashrc
+    cat ./Configs/user_nanorc >${dir}/.nanorc
 done
 
 # Optimise motd if Amazon Linux
 if uname -r | grep amzn; then
     update-motd --disable
-    cat ./motd >/etc/motd
+    cat ./Configs/motd >/etc/motd
     sed -i -e "s/\$domain/""$domain""/g" /etc/motd
 fi
 
