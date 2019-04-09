@@ -27,15 +27,13 @@ done
 # Use Cloudflare DNS
 sed -i -e "s/dns-nameservers.*/dns-nameservers\ \ 1.1.1.1\ 1.0.0.1/g" /etc/network/interfaces
 
-# Add firewall rules
-#ports="80 443 7878 8989 9091 9117 55369" # internal ports don't need opening
-ports="80 443 9091 55369"
+# Add firewall rules & configure selinux
+ports="80 443 9091 55369" # port 9091 only if a client is to be used to access transmission
 for port in $ports; do
     firewall-cmd --permanent --zone=drop --add-port="$port"/tcp
 done
 firewall-cmd --reload
 
-# Configure selinux
 setsebool -P httpd_can_network_connect 1
 
 # Enable epel
@@ -74,12 +72,10 @@ chown -R transmission:transmission /var/lib/transmission/
 cat ./Configs/download-unrar.sh >/usr/local/bin/download-unrar.sh
 chmod +x /usr/local/bin/download-unrar.sh
 
-# Get required packages
-yum install mono-core mono-locale-extras mediainfo libicu libcurl-devel bzip2 -y
-
-# Possibly needed to get radarr working - 4.6.2 may be causing radarr functionality errors
-#rpm --import "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF"
-#curl https://download.mono-project.com/repo/centos7-stable.repo | tee /etc/yum.repos.d/mono-centos7-stable.repo
+# Get required packages with a more recent version of mono
+rpm --import "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF"
+curl https://download.mono-project.com/repo/centos7-stable.repo | tee /etc/yum.repos.d/mono-centos7-stable.repo
+yum install mono-complete mediainfo libicu libcurl-devel bzip2 -y
 
 # Install & configure sonarr
 ( cd /tmp || return
