@@ -57,13 +57,11 @@ firewall-cmd --reload
 
 # Configure .bashrc & .nanorc
 cat ./Configs/root_bashrc >/root/.bashrc
-cat ./Configs/root_nanorc >/root/.nanorc
+cat ./Configs/nanorc >/etc/nanorc
 cat ./Configs/user_bashrc >/etc/skel/.bashrc
-cat ./Configs/user_nanorc >/etc/skel/.nanorc
 for dir in $(ls -d /home/*)
 do
     cat ./Configs/user_bashrc >${dir}/.bashrc
-    cat ./Configs/user_nanorc >${dir}/.nanorc
 done
 
 # Optimise motd if Amazon Linux
