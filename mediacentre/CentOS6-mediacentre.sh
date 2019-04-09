@@ -36,6 +36,14 @@ iptables -A INPUT -p tcp -s localhost --match multiport --dports 8989,9091,9117 
 iptables -A INPUT -i eth0 -p tcp  --match multiport --dports 80,443,8989,9091,9117,55369 -m state --state NEW,ESTABLISHED -j ACCEPT
 /etc/init.d/iptables save
 
+# Enable epel
+yum-config-manager --enable epel
+
+# Install rar/unrar
+wget  https://rarlab.com/rar/rarlinux-x64-5.7.0.tar.gz
+tar -zxf rarlinux-x64-5.7.0.tar.gz )
+cp /tmp/rar/rar /tmp/rar/unrar /usr/local/bin
+
 # Install & configure transmission-daemon
 # Currently included version (2.92 (14714)) is broken. 2.94 can be downloaded instead with the following:
 yum remove libevent -y # Only seems to have nfs-utils as a dependency and transmission 2.94 depends on libevent2 2.0.10
@@ -70,12 +78,10 @@ cp ./Configs/post-certbot.conf /etc/nginx/sites/nzbdrone.conf
 sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/nzbdrone.conf
 echo "@daily root /usr/local/bin/certbot-auto >/dev/null 2>&1" >/etc/cron.d/certbot
 
-# Get required packages
-yum install mono-core mono-devel mono-locale-extras mediainfo libzen libmediainfo -y
-
-# Possibly needed to get radarr working - 4.6.2 may be causing radarr functionality errors
-#rpm --import "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF"
-#curl https://download.mono-project.com/repo/centos6-stable.repo | tee /etc/yum.repos.d/mono-centos6-stable.repo
+# Get required packages with a more recent version of mono
+rpm --import "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF"
+curl https://download.mono-project.com/repo/centos6-stable.repo | tee /etc/yum.repos.d/mono-centos6-stable.repo
+yum install mono-complete mediainfo libzen libmediainfo -y
 
 # Install & configure sonarr
 ( cd /tmp || return
