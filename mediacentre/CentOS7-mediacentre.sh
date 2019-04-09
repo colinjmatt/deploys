@@ -84,7 +84,7 @@ yum install mono-core mono-locale-extras mediainfo libicu libcurl-devel bzip2 -y
 # Install & configure sonarr
 ( cd /tmp || return
 wget http://download.sonarr.tv/v2/master/mono/NzbDrone.master.tar.gz
-tar zxf /tmp/NzbDrone.master.tar.gz -C /opt/ )
+tar -zxf /tmp/NzbDrone.master.tar.gz -C /opt/ )
 mv /opt/NzbDrone /opt/nzbdrone
 cat ./Configs/sonarr.service >/etc/systemd/system/sonarr.service
 mkdir -p /var/lib/sonarr/.config/NzbDrone/
@@ -103,8 +103,8 @@ chown -R radarr:radarr /opt/radarr /var/lib/radarr
 
 # Install & configure jackett
 ( cd /tmp || return
-wget https://github.com/Jackett/Jackett/releases/download/v0.11.150/Jackett.Binaries.LinuxAMDx64.tar.gz
-tar zxf Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt/ )
+wget https://github.com/Jackett/Jackett/releases/download/v0.11.200/Jackett.Binaries.LinuxAMDx64.tar.gz
+tar -zxf Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt/ )
 mv /opt/Jackett /opt/jackett
 cat ./Configs/jackett.service >/etc/systemd/system/jackett.service
 mkdir -p /var/lib/jackett/.config/Jackett
