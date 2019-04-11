@@ -69,6 +69,13 @@ cat ./Configs/arch.conf >/boot/loader/entries/arch.conf
 luksencryptuuid=$(blkid | grep crypto_LUKS | awk -F '"' '{print $2}')
 sed -i -e "s/\$luksencryptuuid/""$luksencryptuuid""/g" /boot/loader/entries/arch*.conf
 
+# Install & configure reflector
+cat ./Configs/10-mirrorupgrade.hook >/etc/pacman.d/hooks/10-mirrorupgrade.hook
+cat ./Configs/reflector.service >/etc/systemd/system/reflector.service
+cat ./Configs/reflector.timer >/etc/systemd/system/reflector.timer
+echo "COUNTRY=UK" > /etc/conf.d/reflector.conf
+systemctl enable reflector.timer
+
 # Config for vfio reservation, blacklist nVidia driver and quiet kernel
 echo "kernel.printk = 3 3 3 3" > /etc/sysctl.d/20-quiet-printk.conf
 
