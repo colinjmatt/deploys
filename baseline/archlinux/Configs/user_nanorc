@@ -1,0 +1,7 @@
+set titlecolor brightwhite,blue
+set statuscolor brightwhite,green
+set errorcolor brightwhite,red
+set selectedcolor brightwhite,magenta
+set numbercolor cyan
+set keycolor cyan
+set functioncolor green

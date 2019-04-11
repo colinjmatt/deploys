@@ -1,0 +1,6 @@
+set historylog
+set locking
+set nowrap
+set suspend
+
+include "/usr/share/nano/*.nanorc"

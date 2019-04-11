@@ -1,0 +1,13 @@
+AllowUsers $sshusers
+AuthenticationMethods publickey
+AuthorizedKeysFile .ssh/id_rsa.pub
+ChallengeResponseAuthentication no
+IgnoreRhosts yes
+PasswordAuthentication no
+PermitEmptyPasswords no
+PermitRootLogin no
+Port 22
+PrintMotd no
+PubkeyAuthentication yes
+Subsystem sftp /usr/lib/ssh/sftp-server
+UsePAM yes
