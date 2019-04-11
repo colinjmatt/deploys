@@ -1,6 +1,7 @@
 #!/bin/bash
 hostname="" # single
 users="user1 user2" # multiple
+sudoers="user1 user2" # multiple
 sshusers="user1 user2" # multiple
 domain="localdomain" # single
 ipaddress="0.0.0.0/0" # single
@@ -17,9 +18,11 @@ export LANG=en_GB.UTF-8
 echo "KEYMAP=uk" > /etc/vconsole.conf
 
 # Create dhcp ethernet connection
+# $interface may be better expressed at echo /sys/class/net/en* | cut -d "/" -f 2 | xargs printf "/%s"
+# old expression is ls /sys/class/net/ | grep "^en"
 cat ./Configs/ethernet-static >/etc/netctl/ethernet-static
 sed -i -e "\
-    s/\$interface/""$(ls /sys/class/net/ | grep "^en")""/g
+    s/\$interface/""$(echo /sys/class/net/en* | cut -d "/" -f 2 | xargs printf "/%s")""/g \
     s/\$ipaddress/""$ipaddress""/g; \
     s/\$gateway/""$gateway""/g; \
     s/\$dns/""$dns""/g; \
@@ -45,14 +48,14 @@ cat ./Configs/nanorc > /etc/nanorc
 passwd root
 
 for name in $users ; do
-    groupadd $name
-    useradd -m -g $name -G users,wheel,storage,power $name
-    passwd $name
+    groupadd "$name"
+    useradd -m -g "$name" -G users,wheel,storage,power "$name"
+    passwd "$name"
 done
 
 for name in $sudoers ; do
-    echo "$name ALL=(ALL) ALL" > /etc/sudoers.d/$name
-    chmod 0400 /etc/sudoers.d/$name
+    echo "$name ALL=(ALL) ALL" > /etc/sudoers.d/"$name"
+    chmod 0400 /etc/sudoers.d/"$name"
 done
 
 # Add modules and hooks to mkinitcpio and generate
@@ -86,6 +89,10 @@ cat ./Configs/systemd-fsck\@.service >/etc/systemd/system/systemd-fsck\@.service
 # Configure SSH
 cat ./Configs/sshd_config >/etc/ssh/sshd_config
 sed -i -e "s/\$sshusers/""$sshusers""/g" /etc/ssh/sshd_config
+
+# Install & configure nfs-utils
+pacman -S --noconfirm nfs-utils
+sed -i -e "s/#Domain\ =/Domain\ =\ ""$domain""/g" /etc/idmapd.conf
 
 # Set locale
 localectl set-keymap uk

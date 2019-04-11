@@ -1,5 +1,6 @@
 #!/bin/bash
-# Media download deployment using Amazon Linux
+# Media server deployment using Amazon Linux
+# Also tested for compatibility on CentOS6
 
 # FQDN of the server
 domain="example.com"

@@ -1,5 +1,6 @@
 #!/bin/bash
-# Media downaload deployment using Digital Ocean CentOS 7
+# Media server deployment using Digital Ocean CentOS 7
+# Also tested on Amazon Linux 2
 
 # FQDN of the server
 domain="example.com"
