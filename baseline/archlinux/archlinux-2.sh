@@ -101,12 +101,13 @@ localectl set-locale LANG="en_GB.UTF-8"
 # Set time synchronisation
 timedatectl set-ntp true
 
-# Enable and start networking to download more packages
-systemctl enable netctl
-netctl enable ethernet-dhcp
+# Enable services
+systemctl enable  haveged \
+                  netctl \
+                  sshd
 
-# Enable ssh to assist with rest of setup
-systemctl enable sshd
+# Enable networking
+netctl enable ethernet-dhcp
 
 # Exit chroot
 exit
