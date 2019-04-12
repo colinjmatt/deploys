@@ -5,7 +5,7 @@ ipaddress="0.0.0.0" # IP address dns requests will be sent to
 dns="0.0.0.1 0.0.0.2" # List of nameservers to be used
 
 # Install packages
-pacman -S --noconfirm dnsmasq
+pacman -S --noconfirm dnsmasq dnsutils
 
 # Configure dnsmasq
 cat ./Configs/dnsmasq.conf >/etc/dnsmasq.conf
