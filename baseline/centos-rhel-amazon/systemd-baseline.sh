@@ -74,7 +74,7 @@ fi
 # Create users & passwords
 for name in $users ; do
     useradd -m "$name"
-    echo "Password for $name"
+    echo -e "Password for $name\n"
     passwd "$name"
 done
 
