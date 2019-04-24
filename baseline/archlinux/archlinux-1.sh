@@ -1,4 +1,5 @@
 #!/bin/bash
+# Setup a non-encrypted base install of Arch
 
 # Set time & keyboard map
 timedatectl set-ntp true
@@ -12,23 +13,17 @@ cat /mirrorlist > /etc/pacman.d/mirrorlist
 parted -s /dev/sda mklabel gpt
 parted -s /dev/sda mkpart ESP fat32 2048s 512MiB
 parted -s /dev/sda set 1 boot on
-parted -s /dev/sda mkpart primary ext4 512MiB 100%
+parted -s /dev/sda mkpart primary ext4 512MiB 2560MiB
+parted -s /dev/sda mkpart primary ext4 2560MiB 100%
+
 mkfs.vfat -F32 /dev/sda1
+mkswap /dev/sda2
+mkfs.ext4 /dev/sda3
 
-cryptsetup luksFormat /dev/sda2
-cryptsetup luksOpen /dev/sda2 sda2-crypt
-
-pvcreate /dev/mapper/sda2-crypt
-vgcreate vg0 /dev/mapper/sda2-crypt
-lvcreate -L 2G vg0 -n swap
-lvcreate -l 100%FREE vg0 -n root
-mkswap /dev/mapper/vg0-swap
-mkfs.ext4 /dev/mapper/vg0-root
-
-mount /dev/mapper/vg0-root /mnt
+mount /dev/sda3 /mnt
 mkdir /mnt/boot
 mount /dev/sda1 /mnt/boot
-swapon /dev/mapper/vg0-swap
+swapon /dev/sda2
 
 # Install base system
 pacstrap /mnt base base-devel openssh wget git
