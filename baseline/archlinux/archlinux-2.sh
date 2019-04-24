@@ -1,12 +1,12 @@
 #!/bin/bash
-hostname="" # single
-users="user1 user2" # multiple
-sudoers="user1 user2" # multiple
-sshusers="user1 user2" # multiple
-domain="localdomain" # single
-ipaddress="0.0.0.0/0" # single
-dns="'0.0.0.0' '0.0.0.0'" # single quoted multiples
-gateway="0.0.0.0" # single
+hostname="" # single value
+users="user1 user2" # multiple values
+sudoers="user1 user2" # multiple values
+sshusers="user1 user2" # multiple values
+domain="localdomain" # single value
+ipaddress="0.0.0.0\/0" # single value, backslash is intentional
+dns="'0.0.0.0' '0.0.0.0'" # single-quoted multiple values
+gateway="0.0.0.0" # single value
 
 # Set region and locale
 rm /etc/localtime
@@ -21,13 +21,12 @@ echo "KEYMAP=uk" > /etc/vconsole.conf
 # $interface may be better expressed at echo /sys/class/net/en* | cut -d "/" -f 2 | xargs printf "/%s"
 # old expression is ls /sys/class/net/ | grep "^en"
 cat ./Configs/ethernet-static >/etc/netctl/ethernet-static
-sed -i -e "\
-    s/\$interface/""$(echo /sys/class/net/en* | cut -d "/" -f 2 | xargs printf "/%s")""/g \
-    s/\$ipaddress/""$ipaddress""/g; \
-    s/\$gateway/""$gateway""/g; \
-    s/\$dns/""$dns""/g; \
-    s/\$domain/""$domain""/g" \
-/etc/netctl/ethernet-static
+sed -i -e "s/\$interface/""$(echo /sys/class/net/en* | cut -d / -f 5 | xargs printf %s)""/g; \
+           s/\$ipaddress/""$ipaddress""/g; \
+           s/\$gateway/""$gateway""/g; \
+           s/\$dns/""$dns""/g; \
+           s/\$domain/""$domain""/g" \
+           /etc/netctl/ethernet-static
 
 # Set hostname
 hostname $hostname
@@ -50,6 +49,7 @@ passwd root
 for name in $users ; do
     groupadd "$name"
     useradd -m -g "$name" -G users,wheel,storage,power "$name"
+    echo -e "Password for $name\n"
     passwd "$name"
 done
 
@@ -59,8 +59,11 @@ for name in $sudoers ; do
 done
 
 # Add modules and hooks to mkinitcpio and generate
-sed -i "s/MODULES=.*/MODULES=(nls_cp437 vfat)/g" /etc/mkinitcpio.conf
-sed -i "s/HOOKS=.*/HOOKS=(base udev autodetect modconf block encrypt lvm2 filesystems keyboard)/g" /etc/mkinitcpio.conf
+if [[ -e /dev/mapper/vg* ]]; then
+  sed -i -e "s/MODULES=.*/MODULES=(nls_cp437 vfat)/g; \
+             s/HOOKS=.*/HOOKS=(base udev autodetect modconf block encrypt lvm2 filesystems keyboard)/g" \
+             /etc/mkinitcpio.conf
+fi
 mkinitcpio -p linux
 
 # Setup bootctl
@@ -69,14 +72,20 @@ mkdir -p /etc/pacman.d/hooks
 cat ./Configs/100-systemd-boot.hook >/etc/pacman.d/hooks/100-systemd-boot.hook
 cat ./Configs/loader.conf >/boot/loader/loader.conf
 cat ./Configs/arch.conf >/boot/loader/entries/arch.conf
-luksencryptuuid=$(blkid | grep crypto_LUKS | awk -F '"' '{print $2}')
-sed -i -e "s/\$luksencryptuuid/""$luksencryptuuid""/g" /boot/loader/entries/arch*.conf
+
+if [[ -e /dev/mapper/vg* ]]; then
+  luksencryptuuid=$(blkid | grep crypto_LUKS | awk -F '"' '{print $2}')
+  sed -i -e "s/\$uuid/cryptdevice=UUID=""$luksencryptuuid"":sda2-crypt:allow-discards root=\/dev\/mapper\/vg0-root\ rd.luks.options=discard/g" /boot/loader/entries/arch*.conf
+else
+  uuid=$(blkid | grep sda3 | awk -F '"' '{print $2}')
+  sed -i -e "s/\$uuid/root=UUID=""$uuid""/g" /boot/loader/entries/arch*.conf
+fi
 
 # Install & configure reflector
+pacman -S reflector --noconfirm
 cat ./Configs/10-mirrorupgrade.hook >/etc/pacman.d/hooks/10-mirrorupgrade.hook
 cat ./Configs/reflector.service >/etc/systemd/system/reflector.service
 cat ./Configs/reflector.timer >/etc/systemd/system/reflector.timer
-echo "COUNTRY=UK" > /etc/conf.d/reflector.conf
 systemctl enable reflector.timer
 
 # Config for vfio reservation, blacklist nVidia driver and quiet kernel
