@@ -26,7 +26,7 @@ mount /dev/sda1 /mnt/boot
 swapon /dev/sda2
 
 # Install base system
-pacstrap /mnt base base-devel openssh wget git
+pacstrap /mnt base base-devel openssh wget git haveged
 
 # Copy mirrorlist to installed base system
 cp /mirrorlist /mnt/etc/pacman.d/

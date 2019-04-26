@@ -4,7 +4,7 @@ users="user1 user2" # multiple values
 sudoers="user1 user2" # multiple values
 sshusers="user1 user2" # multiple values
 domain="localdomain" # single value
-ipaddress="0.0.0.0\/0" # single value, backslash is intentional
+ipaddress="0.0.0.0\/24" # single value, backslash is intentional
 dns="'0.0.0.0' '0.0.0.0'" # single-quoted multiple values
 gateway="0.0.0.0" # single value
 
@@ -44,6 +44,7 @@ cat ./Configs/user_nanorc >/etc/skel/.nanorc
 cat ./Configs/nanorc > /etc/nanorc
 
 # Set root password, create user, add to sudoers and set password
+echo -e "Password for root\n"
 passwd root
 
 for name in $users ; do
@@ -63,7 +64,8 @@ if [[ -e /dev/mapper/vg* ]]; then
   sed -i -e "s/MODULES=.*/MODULES=(nls_cp437 vfat)/g; \
              s/HOOKS=.*/HOOKS=(base udev autodetect modconf block encrypt lvm2 filesystems keyboard)/g" \
              /etc/mkinitcpio.conf
-fi
+else
+  sed -i -e "s/HOOKS=.*/HOOKS=(base udev autodetect modconf block filesystems keyboard)/g" /etc/mkinitcpio.conf
 mkinitcpio -p linux
 
 # Setup bootctl
@@ -116,7 +118,7 @@ systemctl enable  haveged \
                   sshd
 
 # Enable networking
-netctl enable ethernet-dhcp
+netctl enable ethernet-static
 
 # Exit chroot
 exit
