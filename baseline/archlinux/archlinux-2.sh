@@ -1,5 +1,6 @@
 #!/bin/bash
-hostname="" # single value
+installdrive="sda" # Drive to Arch is installed on (e.g. "sda")
+hostname="localhost" # single value
 users="user1 user2" # multiple values
 sudoers="user1 user2" # multiple values
 sshusers="user1 user2" # multiple values
@@ -60,12 +61,15 @@ for name in $sudoers ; do
 done
 
 # Add modules and hooks to mkinitcpio and generate
-if [[ -e /dev/mapper/vg* ]]; then
+for drive in /dev/mapper/vg*; do
+  if [[ -e "$drive" ]]; then
   sed -i -e "s/MODULES=.*/MODULES=(nls_cp437 vfat)/g; \
              s/HOOKS=.*/HOOKS=(base udev autodetect modconf block encrypt lvm2 filesystems keyboard)/g" \
              /etc/mkinitcpio.conf
-else
-  sed -i -e "s/HOOKS=.*/HOOKS=(base udev autodetect modconf block filesystems keyboard)/g" /etc/mkinitcpio.conf
+  else
+    sed -i -e "s/HOOKS=.*/HOOKS=(base udev autodetect modconf block filesystems keyboard)/g" /etc/mkinitcpio.conf
+  fi
+done
 mkinitcpio -p linux
 
 # Setup bootctl
@@ -75,13 +79,15 @@ cat ./Configs/100-systemd-boot.hook >/etc/pacman.d/hooks/100-systemd-boot.hook
 cat ./Configs/loader.conf >/boot/loader/loader.conf
 cat ./Configs/arch.conf >/boot/loader/entries/arch.conf
 
-if [[ -e /dev/mapper/vg* ]]; then
-  luksencryptuuid=$(blkid | grep crypto_LUKS | awk -F '"' '{print $2}')
-  sed -i -e "s/\$uuid/cryptdevice=UUID=""$luksencryptuuid"":sda2-crypt:allow-discards root=\/dev\/mapper\/vg0-root\ rd.luks.options=discard/g" /boot/loader/entries/arch*.conf
-else
-  uuid=$(blkid | grep sda3 | awk -F '"' '{print $2}')
-  sed -i -e "s/\$uuid/root=UUID=""$uuid""/g" /boot/loader/entries/arch*.conf
-fi
+for drive in /dev/mapper/vg*; do
+  if [[ -e "$drive" ]]; then
+    luksencryptuuid=$(blkid | grep crypto_LUKS | awk -F '"' '{print $2}')
+    sed -i -e "s/\$uuid/cryptdevice=UUID=""$luksencryptuuid"":""$installdrive""2-crypt:allow-discards root=\/dev\/mapper\/vg0-root\ rd.luks.options=discard/g" /boot/loader/entries/arch*.conf
+  else
+    uuid=$(blkid | grep "$installdrive"3 | awk -F '"' '{print $2}')
+    sed -i -e "s/\$uuid/root=UUID=""$uuid""/g" /boot/loader/entries/arch*.conf
+  fi
+done
 
 # Install & configure reflector
 pacman -S reflector --noconfirm
@@ -120,5 +126,8 @@ systemctl enable  haveged \
 # Enable networking
 netctl enable ethernet-static
 
+# Cleanup
+rm -rf /deploys /strap.sh
+
 # Exit chroot
-exit
+exit 0
