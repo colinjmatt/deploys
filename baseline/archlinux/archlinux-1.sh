@@ -42,10 +42,10 @@ genfstab -pU /mnt >> /mnt/etc/fstab
 echo "tmpfs	/tmp tmpfs defaults,noatime,mode=1777 0 0" >> /mnt/etc/fstab
 
 # Clone the deploy repo to the new install and chroot in to run next script
-cat ./Configs/strap.sh >/mnt/strap.sh
 (cd /mnt || return
 git clone https://github.com/colinjmatt/deploys)
-sed -i -e "s/installdrive=\"\"/installdrive=\"""$installdrive=""\"/g" /mnt/deploys/baseline/archlinux/archlinux-2.sh
+cat /mnt/deploys/baseline/archlinux/Configs/strap.sh >/mnt/strap.sh
+sed -i -e "s/installdrive=\"sda\"/installdrive=\"""$installdrive=""\"/g" /mnt/deploys/baseline/archlinux/archlinux-2.sh
 nano /mnt/deploys/baseline/archlinux/archlinux-2.sh
 chmod +x /mnt/deploys/baseline/archlinux/archlinux-2.sh /mnt/strap.sh
 
