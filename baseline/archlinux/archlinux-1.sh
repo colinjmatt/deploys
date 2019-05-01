@@ -45,7 +45,7 @@ echo "tmpfs	/tmp tmpfs defaults,noatime,mode=1777 0 0" >> /mnt/etc/fstab
 cat ./Configs/strap.sh >/mnt/strap.sh
 (cd /mnt || return
 git clone https://github.com/colinjmatt/deploys)
-sed -i -e "s/installdrive=\"\"/installdrive=installdrive=\"""$installdrive=""\"/g" /mnt/deploys/baseline/archlinux/archlinux-2.sh
+sed -i -e "s/installdrive=\"\"/installdrive=\"""$installdrive=""\"/g" /mnt/deploys/baseline/archlinux/archlinux-2.sh
 nano /mnt/deploys/baseline/archlinux/archlinux-2.sh
 chmod +x /mnt/deploys/baseline/archlinux/archlinux-2.sh /mnt/strap.sh
 
