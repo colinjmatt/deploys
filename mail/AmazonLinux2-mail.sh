@@ -188,6 +188,8 @@ chown -R nginx:nginx /var/www/$webmailsub
 sed -i -e "s/index.html/index.php/g" /etc/nginx/sites/"$webmailsub"."$domain".conf
 mysql -u root < ./Configs/rainloop.sql
 
+sed -i -e "s/upload_max_filesize\ =.*/upload_max_filesize\ =\ 1024M/g" /etc/php.ini
+
 # Open necessary ports for Firewalld
 ports="22 25 80 143 443 465 993"
 for port in $ports; do
