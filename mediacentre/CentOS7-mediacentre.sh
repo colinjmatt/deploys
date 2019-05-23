@@ -6,10 +6,12 @@
 domain="example.com"
 # Password for transmission rpc
 transmissionpass="password"
-# Location of completed downloads - ALL SLASHES MUST BE ESCAPED!
+# Location of completed downloads
 downcomplete="\/downloads\/complete"
-#Location of incomplete downloads - ALL SLASHES MUST BE ESCAPED!
+downcompletesed=$(echo $downcomplete | sed 's/\//\\\//g')
+#Location of incomplete downloads
 downincomplete="\/downloads\/incomplete"
+downincompletesed=$(echo $downincomplete | sed 's/\//\\\//g')
 
 # Create download directories
 mkdir -p $downcomplete
@@ -44,8 +46,8 @@ wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 yum install /tmp/epel-release-latest-7.noarch.rpm -y
 
 # Install rar/unrar
-wget  https://rarlab.com/rar/rarlinux-x64-5.7.0.tar.gz
-tar -zxf rarlinux-x64-5.7.0.tar.gz )
+wget  https://rarlab.com/rar/rarlinux-x64-5.7.1.tar.gz
+tar -zxf rarlinux-x64-5.7.1.tar.gz )
 cp /tmp/rar/rar /tmp/rar/unrar /usr/local/bin
 
 # Install & configure nginx with certbot certs
@@ -65,8 +67,8 @@ echo "@daily root /usr/local/bin/certbot-auto >/dev/null 2>&1" >/etc/cron.d/cert
 yum install transmission-daemon -y
 mkdir -p /var/lib/transmission/.config/transmission-daemon/
 cat ./Configs/settings.json >/var/lib/transmission/.config/transmission-daemon/settings.json
-sed -i -e " s/\$downcomplete/""$downcomplete""/g
-            s/\$downincomplete/""$downincomplete""/g
+sed -i -e " s/\$downcompletesed/""$downcompletesed""/g
+            s/\$downincompletesed/""$downincompletesed""/g
             s/\$transmissionpass/""$transmissionpass""/g" \
             /var/lib/transmission/.config/transmission-daemon/settings.json
 chown -R transmission:transmission /var/lib/transmission/
@@ -90,8 +92,8 @@ chown -R sonarr:sonarr /opt/nzbdrone /var/lib/sonarr
 
 # Install and configure radarr
 ( cd /tmp || return
-wget https://github.com/Radarr/Radarr/releases/download/v0.2.0.1293/Radarr.develop.0.2.0.1293.linux.tar.gz
-tar -zxf Radarr.develop.0.2.0.1293.linux.tar.gz -C /opt/ )
+wget https://github.com/Radarr/Radarr/releases/download/v0.2.0.1344/Radarr.develop.0.2.0.1344.linux.tar.gz
+tar -zxf Radarr.develop.0.2.0.1344.linux.tar.gz -C /opt/ )
 mv /opt/Radarr /opt/radarr
 cat ./Configs/radarr.service >/etc/systemd/system/radarr.service
 mkdir -p /var/lib/radarr/.config/Radarr
@@ -100,7 +102,7 @@ chown -R radarr:radarr /opt/radarr /var/lib/radarr
 
 # Install & configure jackett
 ( cd /tmp || return
-wget https://github.com/Jackett/Jackett/releases/download/v0.11.200/Jackett.Binaries.LinuxAMDx64.tar.gz
+wget https://github.com/Jackett/Jackett/releases/download/v0.11.356/Jackett.Binaries.LinuxAMDx64.tar.gz
 tar -zxf Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt/ )
 mv /opt/Jackett /opt/jackett
 cat ./Configs/jackett.service >/etc/systemd/system/jackett.service
