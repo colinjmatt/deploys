@@ -63,6 +63,7 @@ cat ./Configs/10-master.conf >/etc/dovecot/conf.d/10-master.conf
 cat ./Configs/10-ssl.conf >/etc/dovecot/conf.d/10-ssl.conf
 cat ./Configs/15-mailboxes.conf >/etc/dovecot/conf.d/15-mailboxes.conf
 cat ./Configs/20-lmtp.conf >/etc/dovecot/conf.d/20-lmtp.conf
+cat ./Configs/20-imap.conf >/etc/dovecot/conf.d/20-imap.conf
 cat ./Configs/90-sieve.conf >/etc/dovecot/conf.d/90-sieve.conf
 
 # Configure postfix
