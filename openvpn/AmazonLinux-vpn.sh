@@ -20,7 +20,7 @@ yum install openvpn easy-rsa mailx -y
 sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" /root/.bashrc /etc/skel/.bashrc
 for dir in $(ls -d /home/*)
 do
-    sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" /home/$dir/.bashrc
+    sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" $dir/.bashrc
 done
 
 # Use Cloudflare DNS
@@ -92,6 +92,9 @@ chmod +x /usr/local/bin/gen-ovpn
 /etc/init.d/network restart
 chkconfig openvpn on
 /etc/init.d/openvpn start
+
+# Truncate all log files
+find /var/log/ -type f -name "*" -exec truncate -s 0 {} +
 
 # TODO
 # Create script for on-demand revocation
