@@ -61,6 +61,8 @@ systemctl enable nginx --now
 certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /usr/share/nginx/html -d "$domain"
 cat ./Configs/post-certbot.conf >/etc/nginx/sites/download.conf
 sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/download.conf
+cat ./Configs/certbot-auto >/usr/local/bin/certbot-auto
+chmod +x /usr/local/bin/certbot-auto
 echo "@daily root /usr/local/bin/certbot-auto >/dev/null 2>&1" >/etc/cron.d/certbot
 
 # Install & configure transmission-daemon
