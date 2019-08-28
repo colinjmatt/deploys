@@ -51,7 +51,7 @@ systemctl start firewalld
 firewall-cmd --permanent --zone=drop --change-interface=eth0
 firewall-cmd --permanent --zone=drop --add-rich-rule="
   rule family=\"ipv4\"
-  source address=\"$sship/32\"
+  source address=\"$sship\"
   port protocol=\"tcp\" port=\"22\" accept"
 firewall-cmd --reload
 
