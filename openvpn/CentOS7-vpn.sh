@@ -30,7 +30,7 @@ sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" /root/.bashrc /etc/skel/.bashrc
 for dir in /home/*
 do
   [[ -d "$dir" ]] || break
-  sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" $dir/.bashrc
+  sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" "$dir"/.bashrc
 done
 
 # Use Cloudflare DNS
@@ -74,8 +74,8 @@ firewall-cmd --permanent --zone=drop --add-port=1194/udp
 firewall-cmd --permanent --zone=drop --add-service openvpn
 firewall-cmd --permanent --zone=drop --add-masquerade
 interface=$(ip route get 1.1.1.1 | awk 'NR==1 {print $(NF-2)}')
-firewall-cmd --permanent --zone=drop --direct --passthrough ipv4 -t nat -A POSTROUTING -s 10.8.0.0/24 -o $interface -j MASQUERADE
-firewall-cmd --permanent --zone=drop --direct --passthrough ipv4 -t nat -A POSTROUTING -s 10.8.1.0/24 -o $interface -j MASQUERADE
+firewall-cmd --permanent --zone=drop --direct --passthrough ipv4 -t nat -A POSTROUTING -s 10.8.0.0/24 -o "$interface" -j MASQUERADE
+firewall-cmd --permanent --zone=drop --direct --passthrough ipv4 -t nat -A POSTROUTING -s 10.8.1.0/24 -o "$interface" -j MASQUERADE
 firewall-cmd --reload
 
 # Openvpn conifguration
