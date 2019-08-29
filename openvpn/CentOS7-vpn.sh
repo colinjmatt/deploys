@@ -6,11 +6,10 @@ domain="example.com"
 # List of user accounts to create
 
 # Disable as much logging as possible
+systemctl disable rsyslog --now
+
 cat ./Configs/rsyslog-systemd.conf >/etc/rsyslog-systemd.conf
 rm -rf /etc/rsyslog.d/*
-ln -sfn /dev/null /var/log/lastlog
-ln -sfn /dev/null /var/log/wtmp
-ln -sfn /dev/null /var/log/audit/audit.log
 
 # Install packages
 yum install wget -y
@@ -21,9 +20,10 @@ yum install openvpn easy-rsa mailx -y
 
 # Disable bash history saving
 sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" /root/.bashrc /etc/skel/.bashrc
-for dir in $(ls -d /home/*)
+for dir in /home/*
 do
-    sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" $dir/.bashrc
+  [[ -d "$dir" ]] || break
+  sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" $dir/.bashrc
 done
 
 # Use Cloudflare DNS
@@ -91,7 +91,10 @@ systemctl enable  openvpn@tcpserver --now \
                   openvpn@udpserver --now
 
 # Truncate all log files
-find /var/log/ -type f -name "*" -exec truncate -s 0 {} +
+while IFS= read -r -d '' log
+do
+  truncate "$log" -s 0
+done < <(find /var/log/ -type f -name "*")
 
 # TODO
 # Create script for on-demand revocation
