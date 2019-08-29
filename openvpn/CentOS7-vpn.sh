@@ -6,7 +6,7 @@ domain="example.com"
 # List of user accounts to create
 
 # Disable as much logging as possible
-cat ./Configs/rsyslog-systemd.conf >/etc/rsyslog.conf
+cat ./Configs/rsyslog-systemd.conf >/etc/rsyslog-systemd.conf
 rm -rf /etc/rsyslog.d/*
 ln -sfn /dev/null /var/log/lastlog
 ln -sfn /dev/null /var/log/wtmp
@@ -15,7 +15,7 @@ ln -sfn /dev/null /var/log/audit/audit.log
 # Install packages
 yum install wget -y
 ( cd /tmp || return
-wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm )
 yum install /tmp/epel-release-latest-7.noarch.rpm -y
 yum install openvpn easy-rsa mailx -y
 
@@ -39,8 +39,8 @@ openssl dhparam -out /etc/openvpn/server/dh.pem 2048
 openvpn --genkey --secret /etc/openvpn/server/ta.key
 
 # Initialise PKI
+cat ./Configs/vars >/etc/easy-rsa/vars
 ( cd /etc/easy-rsa || return
-cat ./Configs/vars >./vars
 source ./vars
 ./easyrsa init-pki
 
@@ -61,9 +61,12 @@ cat ./Configs/iptables-config >/etc/sysconfig/iptables-config
 modprobe iptable_nat
 echo 1 | tee /proc/sys/net/ipv4/ip_forward
 
+
+firewall-cmd --permanent --zone=drop --add-port=443/tcp
+firewall-cmd --permanent --zone=drop --add-port=1194/udp
 firewall-cmd --permanent --zone=drop --add-service openvpn
 firewall-cmd --permanent --zone=drop --add-masquerade
-interface=$(ip route get 8.8.8.8 | awk 'NR==1 {print $(NF-2)}')
+interface=$(ip route get 1.1.1.1 | awk 'NR==1 {print $(NF-2)}')
 firewall-cmd --permanent --zone=drop --direct --passthrough ipv4 -t nat -A POSTROUTING -s 10.8.0.0/24 -o $interface -j MASQUERADE
 firewall-cmd --permanent --zone=drop --direct --passthrough ipv4 -t nat -A POSTROUTING -s 10.8.1.0/24 -o $interface -j MASQUERADE
 firewall-cmd --reload
@@ -84,7 +87,8 @@ chmod +x /usr/local/bin/gen-ovpn
 
 # Start and enable openvpn
 systemctl restart network
-systemctl enable openvpn@server --now
+systemctl enable  openvpn@tcpserver --now \
+                  openvpn@udpserver --now
 
 # Truncate all log files
 find /var/log/ -type f -name "*" -exec truncate -s 0 {} +
