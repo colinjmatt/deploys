@@ -36,8 +36,8 @@ openssl dhparam -out /etc/openvpn/server/dh.pem 2048
 openvpn --genkey --secret /etc/openvpn/server/ta.key
 
 # Initialise PKI
-( cd /etc/easy-rsa || return
 cat ./Configs/vars >./vars
+( cd /etc/easy-rsa || return
 source ./vars
 ./easyrsa init-pki
 
