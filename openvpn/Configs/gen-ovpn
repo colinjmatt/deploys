@@ -31,7 +31,6 @@ while getopts 'v:V:p:r:d:a:P:e:h' flag; do
         V) vpnname="${OPTARG}" ;;
         p) protocol="${OPTARG}" ;;
         r) relaydomain="${OPTARG}" ;;
-        d) destinationemail="${OPTARG}" ;;
         a) authuser="${OPTARG}" ;;
         P) authpassword="${OPTARG}" ;;
         e) destinationemail="${OPTARG}" ;;
