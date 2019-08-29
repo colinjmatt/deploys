@@ -28,7 +28,7 @@ sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" /root/.bashrc /etc/skel/.bashrc
 for dir in /home/*
 do
   [[ -d "$dir" ]] || break
-  sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" $dir/.bashrc
+  sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" "$dir"/.bashrc
 done
 
 # Use Cloudflare DNS
