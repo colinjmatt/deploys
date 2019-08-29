@@ -9,6 +9,13 @@ domain="example.com"
 /etc/init.d/syslog stop
 chkconfig syslog off
 
+find /var/log/ -type f -name "*" -exec truncate -s 0 {} +
+
+while IFS= read -r -d '' log
+do
+  ln -sfn /dev/null "$log"
+done< <(find /var/log/ -type f -name "*" -print0)
+
 cat ./Configs/rsyslog.conf >/etc/rsyslog.conf
 rm -rf /etc/rsyslog.d/*
 
@@ -94,12 +101,6 @@ chmod +x /usr/local/bin/gen-ovpn
 /etc/init.d/network restart
 chkconfig openvpn on
 /etc/init.d/openvpn start
-
-# Truncate all log files
-while IFS= read -r -d '' log
-do
-  truncate "$log" -s 0
-done < <(find /var/log/ -type f -name "*")
 
 # TODO
 # Create script for on-demand revocation
