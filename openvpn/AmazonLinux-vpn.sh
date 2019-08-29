@@ -6,11 +6,11 @@ domain="example.com"
 # List of user accounts to create
 
 # Disable as much logging as possible
+/etc/init.d/syslog stop
+chkconfig syslog off
+
 cat ./Configs/rsyslog.conf >/etc/rsyslog.conf
 rm -rf /etc/rsyslog.d/*
-ln -sfn /dev/null /var/log/lastlog
-ln -sfn /dev/null /var/log/wtmp
-ln -sfn /dev/null /var/log/audit/audit.log
 
 # Install packages
 yum-config-manager --enable epel
@@ -18,9 +18,10 @@ yum install openvpn easy-rsa mailx -y
 
 # Disable bash history saving
 sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" /root/.bashrc /etc/skel/.bashrc
-for dir in $(ls -d /home/*)
+for dir in /home/*
 do
-    sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" $dir/.bashrc
+  [[ -d "$dir" ]] || break
+  sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" $dir/.bashrc
 done
 
 # Use Cloudflare DNS
@@ -71,7 +72,8 @@ echo 1 | tee /proc/sys/net/ipv4/ip_forward
 iptables -t nat -A POSTROUTING -o eth0 -s 10.8.0.0/24 -j MASQUERADE
 iptables -t nat -A POSTROUTING -o eth0 -s 10.8.1.0/24 -j MASQUERADE
 iptables -P INPUT DROP
-iptables -A INPUT -i eth0 -p tcp --match multiport --dports 443,1194 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp --match multiport --dports 443 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -p udp --match multiport --dports 1194 -m state --state NEW,ESTABLISHED -j ACCEPT
 /etc/init.d/iptables save
 
 # Openvpn conifguration
@@ -94,7 +96,10 @@ chkconfig openvpn on
 /etc/init.d/openvpn start
 
 # Truncate all log files
-find /var/log/ -type f -name "*" -exec truncate -s 0 {} +
+while IFS= read -r -d '' log
+do
+  truncate "$log" -s 0
+done < <(find /var/log/ -type f -name "*")
 
 # TODO
 # Create script for on-demand revocation
