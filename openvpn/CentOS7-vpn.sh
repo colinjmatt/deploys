@@ -11,6 +11,13 @@ systemctl disable rsyslog --now
 cat ./Configs/rsyslog-systemd.conf >/etc/rsyslog-systemd.conf
 rm -rf /etc/rsyslog.d/*
 
+find /var/log/ -type f -name "*" -exec truncate -s 0 {} +
+
+while IFS= read -r -d '' log
+do
+  ln -sfn /dev/null "$log"
+done< <(find /var/log/ -type f -name "*" -print0)
+
 # Install packages
 yum install wget -y
 ( cd /tmp || return
@@ -89,12 +96,6 @@ chmod +x /usr/local/bin/gen-ovpn
 systemctl restart network
 systemctl enable  openvpn@tcpserver --now \
                   openvpn@udpserver --now
-
-# Truncate all log files
-while IFS= read -r -d '' log
-do
-  truncate "$log" -s 0
-done < <(find /var/log/ -type f -name "*")
 
 # TODO
 # Create script for on-demand revocation
