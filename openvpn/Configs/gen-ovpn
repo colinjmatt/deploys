@@ -74,9 +74,9 @@ fi
     cat /etc/easy-rsa/pki/issued/"$vpnclient".crt
     echo -e "</cert>\n<key>"
     cat /etc/easy-rsa/pki/private/"$vpnclient".key
-    echo -e "</key>\n<tls-auth>"
+    echo -e "</key>\n<tls-crypt>"
     cat /etc/openvpn/server/ta.key
-    echo "</tls-auth>"
+    echo "</tls-crypt>"
 } >>/etc/openvpn/client-profiles/"$vpnclient".ovpn
 
 # Send the .ovpn profile to the chosen email address
