@@ -62,6 +62,7 @@ fi
 # Check if the given vpn client name already has a cert
 if [[ ! -f /etc/easy-rsa/pki/issued/"$vpnclient".crt ]]; then
     cd /etc/easy-rsa || return
+    export EASYRSA_REQ_CN="$vpnclient"
     ./easyrsa --batch gen-req "$vpnclient" nopass
     ./easyrsa --batch sign-req client "$vpnclient"
 fi
