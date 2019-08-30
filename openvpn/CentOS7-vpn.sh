@@ -18,6 +18,8 @@ do
   ln -sfn /dev/null "$log"
 done< <(find /var/log/ -type f -name "*" -print0)
 
+chmod 666 /dev/null
+
 # Install packages
 yum install wget -y
 ( cd /tmp || return
