@@ -9,6 +9,9 @@ domain="example.com"
 /etc/init.d/syslog stop
 chkconfig syslog off
 
+cat ./Configs/rsyslog.conf >/etc/rsyslog.conf
+rm -rf /etc/rsyslog.d/*
+
 find /var/log/ -type f -name "*" -exec truncate -s 0 {} +
 
 while IFS= read -r -d '' log
@@ -16,8 +19,7 @@ do
   ln -sfn /dev/null "$log"
 done< <(find /var/log/ -type f -name "*" -print0)
 
-cat ./Configs/rsyslog.conf >/etc/rsyslog.conf
-rm -rf /etc/rsyslog.d/*
+chmod 666 /dev/null
 
 # Install packages
 yum-config-manager --enable epel
