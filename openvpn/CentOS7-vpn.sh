@@ -18,7 +18,7 @@ do
   ln -sfn /dev/null "$log"
 done< <(find /var/log/ -type f -name "*" -print0)
 
-chmod 666 /dev/null
+echo "chmod 0666 /dev/null" >>/etc/rc.d/rc.local
 
 # Install packages
 yum install wget -y
