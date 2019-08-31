@@ -36,9 +36,12 @@ done
 
 # Install and configure pixelserv
 wget -O /usr/local/bin/pixelserv.pl http://proxytunnel.sourceforge.net/files/pixelserv.pl.txt
+cat ./Configs/pixelserv.service >/etc/systemd/system/pixelserv.service
+
+# Setup blocklist update script
 cat ./Configs/adblock.sh >/usr/local/bin/adblock.sh
 chmod +x /usr/local/bin/pixelserv.pl /usr/local/bin/adblock.sh
-cat ./Configs/pixelserv.service >/etc/systemd/system/pixelserv.service
+wget -O /etc/dnsmasq.adblock 'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=dnsmasq&showintro=0&mimetype=plaintext'
 
 # Configure dnsmasq
 cat ./Configs/dnsmasq.hosts >/etc/dnsmasq.hosts
@@ -78,7 +81,6 @@ cp /etc/easy-rsa/pki/issued/vpn-server.crt /etc/openvpn/server/ )
 # Enable ip forwarding & firewall hardening rules
 echo "net.ipv4.ip_forward = 1" >/etc/sysctl.conf
 cat ./Configs/iptables-config >/etc/sysconfig/iptables-config
-
 modprobe iptable_nat
 echo 1 | tee /proc/sys/net/ipv4/ip_forward
 
@@ -99,9 +101,9 @@ firewall-cmd --reload
 # Openvpn conifguration
 cat ./Configs/adblock-server.conf >/etc/openvpn/tcpserver.conf
 cat ./Configs/adblock-server.conf >/etc/openvpn/udpserver.conf
-sed -i -e " s/port.*/port\ 1194/g
-            s/proto.*/proto\ udp4/g
-            s/dev.*/dev\ tun1/g
+sed -i -e " s/port\ .*/port\ 1194/g
+            s/proto\ .*/proto\ udp4/g
+            s/dev\ .*/dev\ tun1/g
             s/10.8.0/10.8.1/g " \
             /etc/openvpn/udpserver.conf
 
