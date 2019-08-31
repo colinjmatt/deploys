@@ -1,5 +1,5 @@
 #!/bin/bash
-# OpenVPN server deployment using CentOS 7
+# OpenVPN server deployment with ad blocking functionality added using CentOS 7
 
 domain="example.com" # FQDN of the server
 dns="1.1.1.1 1.0.0.1" # List of nameservers to be used
