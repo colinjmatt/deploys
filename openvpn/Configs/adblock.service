@@ -1,0 +1,7 @@
+[Unit]
+Description=Adblock domain update
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/adblock.sh

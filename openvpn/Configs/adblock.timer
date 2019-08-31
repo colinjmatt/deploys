@@ -1,0 +1,12 @@
+[Unit]
+Description=Adblock domain update
+
+[Timer]
+OnCalendar=monthly
+Persistent=true
+AccuracySec=1us
+OnStartupSec=60
+RandomizedDelaySec=12h
+
+[Install]
+WantedBy=timers.target
