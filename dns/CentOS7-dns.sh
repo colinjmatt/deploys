@@ -22,6 +22,10 @@ sed -i -e " s/\$domain/""$domain""/g
             s/\$ipaddress/""$ipaddress""/g" \
             /etc/dnsmasq.conf
 
+firewall-cmd --permanent --zone=drop --add-port=53/tcp
+firewall-cmd --permanent --zone=drop --add-port=53/udp
+firewall-cmd --reload
+
 # Install and configure pixelserv
 wget -O /usr/local/bin/pixelserv.pl http://proxytunnel.sourceforge.net/files/pixelserv.pl.txt
 chmod +x /usr/local/bin/pixelserv.pl /usr/local/bin/adblock.sh
