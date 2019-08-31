@@ -3,7 +3,6 @@
 
 # FQDN of the server
 domain="example.com"
-# List of user accounts to create
 
 # Disable as much logging as possible
 systemctl disable rsyslog --now
