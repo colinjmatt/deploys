@@ -3,7 +3,6 @@
 
 # FQDN of the server
 domain="example.com"
-# List of user accounts to create
 
 # Disable as much logging as possible
 /etc/init.d/syslog stop
@@ -86,8 +85,13 @@ iptables -A INPUT -i eth0 -p udp --match multiport --dports 1194 -m state --stat
 /etc/init.d/iptables save
 
 # Openvpn conifguration
-cat ./Configs/tcpserver.conf >/etc/openvpn/tcpserver.conf
-cat ./Configs/udpserver.conf >/etc/openvpn/udpserver.conf
+cat ./Configs/adblock-server.conf >/etc/openvpn/tcpserver.conf
+cat ./Configs/adblock-server.conf >/etc/openvpn/udpserver.conf
+sed -i -e " s/port\ .*/port\ 1194/g
+            s/proto\ .*/proto\ udp4/g
+            s/dev\ .*/dev\ tun1/g
+            s/10.8.0/10.8.1/g " \
+            /etc/openvpn/udpserver.conf
 
 # Client .ovpn profile
 mkdir -p /etc/openvpn/template-profiles
