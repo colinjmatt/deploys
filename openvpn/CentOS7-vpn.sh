@@ -80,8 +80,13 @@ firewall-cmd --permanent --zone=drop --direct --passthrough ipv4 -t nat -A POSTR
 firewall-cmd --reload
 
 # Openvpn conifguration
-cat ./Configs/tcpserver.conf >/etc/openvpn/tcpserver.conf
-cat ./Configs/udpserver.conf >/etc/openvpn/udpserver.conf
+cat ./Configs/server.conf >/etc/openvpn/tcpserver.conf
+cat ./Configs/server.conf >/etc/openvpn/udpserver.conf
+sed -i -e " s/port.*/port\ 1194/g
+            s/proto.*/proto\ udp4/g
+            s/dev.*/dev\ tun1/g
+            s/10.8.0/10.8.1/g " \
+            /etc/openvpn/udpserver.conf
 
 # Client .ovpn profile
 mkdir -p /etc/openvpn/template-profiles
