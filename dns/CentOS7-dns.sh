@@ -2,7 +2,7 @@
 # DNS server deployment using CentOS
 domain="localdomain" # Local domain name
 ipaddress="0.0.0.0" # IP address dns requests will be sent to. comma separated if multiple
-dns="0.0.0.1 0.0.0.2" # List of nameservers to be used
+dns="1.1.1.1 1.0.0.1" # List of nameservers to be used
 
 # Install packages
 yum install dnsmasq bind-utils -y
