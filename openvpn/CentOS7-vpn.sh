@@ -96,7 +96,7 @@ chmod +x /usr/local/bin/gen-ovpn
 
 # Start and enable openvpn
 systemctl restart network
-systemctl enable  openvpn@tcpserver --now \
+systemctl enable  openvpn@tcpserver \
                   openvpn@udpserver --now
 
 # TODO
