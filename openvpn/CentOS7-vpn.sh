@@ -82,9 +82,9 @@ firewall-cmd --reload
 # Openvpn conifguration
 cat ./Configs/server.conf >/etc/openvpn/tcpserver.conf
 cat ./Configs/server.conf >/etc/openvpn/udpserver.conf
-sed -i -e " s/port.*/port\ 1194/g
-            s/proto.*/proto\ udp4/g
-            s/dev.*/dev\ tun1/g
+sed -i -e " s/port\ .*/port\ 1194/g
+            s/proto\ .*/proto\ udp4/g
+            s/dev\ .*/dev\ tun1/g
             s/10.8.0/10.8.1/g " \
             /etc/openvpn/udpserver.conf
 
