@@ -24,7 +24,7 @@ yum install wget -y
 ( cd /tmp || return
 wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm )
 yum install /tmp/epel-release-latest-7.noarch.rpm -y
-yum install openvpn easy-rsa mailx dnsmasq bind-utils -y
+yum install openvpn easy-rsa mailx dnsmasq -y
 
 # Disable bash history saving
 sed -i -e "s/HISTFILESIZE=.*/HISTFILESIZE=0/g" /root/.bashrc /etc/skel/.bashrc
@@ -127,6 +127,13 @@ systemctl enable  openvpn@tcpserver \
 
 # Just in case dnsmasq starts up too soon for OpenVPN
 systemctl restart dnsmasq
+
+# OPTIONAL - Run:
+# systemctl edit --full dnsmasq
+#
+# Add the following lines to [Service]:
+# Restart=on-failure
+# RestartSec=5s
 
 # TODO
 # Create script for on-demand revocation
