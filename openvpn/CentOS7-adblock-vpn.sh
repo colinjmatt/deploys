@@ -5,7 +5,7 @@ domain="example.com" # FQDN of the server
 dns="1.1.1.1 1.0.0.1" # List of nameservers to be used
 
 # Disable as much logging as possible
-systemctl disable rsyslog --now
+systemctl disable rsyslog systemd-journald systemd-journald.socket --now
 
 cat ./Configs/rsyslog-systemd.conf >/etc/rsyslog-systemd.conf
 rm -rf /etc/rsyslog.d/*
