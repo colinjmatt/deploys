@@ -1,5 +1,5 @@
 #!/bin/bash
-vpnclient=""
+# Pre-populate any constant variables here.
 vpnname=""
 protocol=""
 relaydomain=""
@@ -7,13 +7,26 @@ destinationemail=""
 authuser=""
 authpassword=""
 
+# Set the client anonymous client name. Can be overridden by specifying -v, but lowers anonimity.
+name=client
+i=1
+if [[ -e /etc/openvpn/client-profiles/$name$i.ovpn ]] ; then
+  while
+    [[ -e /etc/openvpn/client-profiles/$name$i.ovpn ]] ; do
+      (( i++ ))
+  done
+  vpnname=$name$i
+else
+  vpnname=$name$i
+fi
+
 # Usage
 print_usage() {
     printf "Usage: gen-ovpn -v [client name] -V [vpn server name] -p [protocol] -r [relay server] -a [user] -P [password] -e [destination email]
     Port 587 will be used if a username AND password is provided to authenticate with the smtp relay, otherwise port 25 is used without authentication.
     Non-authenticated smtp requests will likely be denied unless the IP it is being sent from is whitelisted.
 
-    -v    Name given to the client .ovpn profile and associated certificates e.g. client1
+    -v    Name given to the client .ovpn profile and associated certificates e.g. client1 (optional, lowers anonimity)
     -V    Friendly name of the VPN server e.g. PersonalVPN
     -p    Specify UDP or TCP for either UDP port 1194 or TCP port 443 for the VPN connection
     -r    Name of the mail server that will act as the smtp relay to send the profile email
