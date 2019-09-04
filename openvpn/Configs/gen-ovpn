@@ -15,9 +15,9 @@ if [[ -e /etc/openvpn/client-profiles/$name$i.ovpn ]] ; then
     [[ -e /etc/openvpn/client-profiles/$name$i.ovpn ]] ; do
       (( i++ ))
   done
-  vpnname=$name$i
+  vpnclient=$name$i
 else
-  vpnname=$name$i
+  vpnclient=$name$i
 fi
 
 # Usage
