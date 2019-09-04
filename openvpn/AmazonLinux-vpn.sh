@@ -33,7 +33,7 @@ do
 done
 
 # Use Cloudflare DNS
-cat ./Configs/ifcfg-eth0 >>/etc/sysconfig/network-scripts/ifcfg-eth0
+echo "DNS1=1.1.1.1 \nDNS2=1.0.0.1" >>/etc/sysconfig/network-scripts/ifcfg-eth0
 
 # Configure easy-rsa
 mkdir -p /etc/easy-rsa
