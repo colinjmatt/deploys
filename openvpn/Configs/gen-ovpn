@@ -55,8 +55,8 @@ while getopts 'v:V:p:r:d:a:P:e:h' flag; do
 done
 
 # Check all required variables are present and protocol is correct
-if [[ -z "$vpnclient" && -z "$vpnname" && -z "$protocol" && -z "$relaydomain" && -z "$destinationemail" ]]; then
-    echo -e "ERROR. A client name, VPN name, protocol, relay domain and destination email address must be specified.\n"; echo ""
+if [[ -z "$vpnname" && -z "$protocol" && -z "$relaydomain" && -z "$destinationemail" ]]; then
+    echo -e "ERROR. A VPN name, protocol, relay domain and destination email address must be specified.\n"; echo ""
     exit 1
 elif ! [[ $protocol =~ ^(UDP|udp|TCP|tcp)$ ]]; then
     echo -e "ERROR. Please specify ether TCP or UDP protocol using -p\n"
