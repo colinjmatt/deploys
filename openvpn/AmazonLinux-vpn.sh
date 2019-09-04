@@ -1,5 +1,5 @@
 #!/bin/bash
-# OpenVPN server deployment using Amazon Linux
+# OpenVPN server deployment using Amazon Linux (NOT Amazon Linux 2)
 
 # FQDN of the server
 domain="example.com"
