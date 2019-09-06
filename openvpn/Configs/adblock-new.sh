@@ -53,11 +53,11 @@ sed -i -e " s/^0.0.0.0//
 #  - add dnsmasq prefix
 #  - add dnsmasq suffix
 #  - sort, remove duplicates and merge all files in dnsmasq.adblock
-sed -i -e "s/^[ \t]*//" *
-sed -i -e "s/\#.*$//" *
-sed -i -e "/^\s*$/d" *
-sed -i -e "s/^/address=\//" *
-sed -i -e "s/$/\/""$dns""/" *
+sed -i -e " s/^[ \t]*//
+            s/\#.*$//
+            /^\s*$/d
+            s/^/address=\//
+            s/$/\/""$dns""/" *
 cat * | sort | sort -u >dnsmasq.adblock
 
 mv dnsmasq.adblock /etc/ )
