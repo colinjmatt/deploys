@@ -61,3 +61,4 @@ cat * | sort | sort -u >dnsmasq.adblock
 mv dnsmasq.adblock /etc/ )
 
 rm -rf /tmp/adblock
+systemctl restart dnsmasq
