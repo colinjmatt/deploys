@@ -9,32 +9,32 @@ fi
 mkdir -p /tmp/adblock
 ( cd /tmp/adblock || return
 
-wget -O adaw-block.txt http://adaway.org/hosts.txt
+wget -qO adaw-block.txt http://adaway.org/hosts.txt
 sed -i -e 1,24d adaw-block.txt
 
-wget -O danp-block.txt http://someonewhocares.org/hosts/zero/hosts
+wget -qO danp-block.txt http://someonewhocares.org/hosts/zero/hosts
 sed -i -e 1,85d danp-block.txt
 
-wget -O mhka-block.txt http://adblock.mahakala.is/hosts
+wget -qO mhka-block.txt http://adblock.mahakala.is/hosts
 
-wget -O mphs-block.txt http://hosts-file.net/ad_servers.txt
+wget -qO mphs-block.txt http://hosts-file.net/ad_servers.txt
 sed -i -e 1,24d mphs-block.txt
 
-wget -O mvps-block.txt http://winhelp2002.mvps.org/hosts.txt
+wget -qO mvps-block.txt http://winhelp2002.mvps.org/hosts.txt
 sed -i -e 1,30d mvps-block.txt
 
-wget -O mwdl-block.txt http://www.malwaredomainlist.com/hostslist/hosts.txt
+wget -qO mwdl-block.txt http://www.malwaredomainlist.com/hostslist/hosts.txt
 sed -i -e 1,5d mwdl-block.txt
 
-wget -O noco-block.txt https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/hosts.txt
+wget -qO noco-block.txt https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/hosts.txt
 sed -i -e 1,11d noco-block.txt
 
-wget -O pgly-block.txt http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext
+wget -qO pgly-block.txt 'http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext'
 sed -i -e 1,14d pgly-block.txt
 
 # Remove hosts file IP entries
-sed -i -e " /0.0.0.0/d
-            /127.0.0.1/d" \
+sed -i -e " s/^0.0.0.0//
+            s/^127.0.0.1//" \
             adaw-block.txt \
             danp-block.txt \
             mhka-block.txt \
@@ -54,7 +54,7 @@ sed -i -e "/^\s*$/d" *
 # add dnsmasq prefix
 sed -i -e "s/^/address=\//" *
 # add dnsmasq suffix
-sed -i -e "/$/\/""$dns""/" *
+sed -i -e "s/$/\/""$dns""/" *
 
 cat * | sort | sort -u >dnsmasq.adblock
 
