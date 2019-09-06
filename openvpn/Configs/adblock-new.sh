@@ -16,8 +16,6 @@ sed -i -e 1,24d adaw-block.txt
 wget -q -O- http://someonewhocares.org/hosts/zero/hosts | tr -d "\r" >danp-block.txt
 sed -i -e 1,85d danp-block.txt
 
-wget -q -O- http://adblock.mahakala.is/hosts | tr -d "\r" >mhka-block.txt
-
 wget -q -O- http://hosts-file.net/ad_servers.txt | tr -d "\r" >mphs-block.txt
 sed -i -e 1,10d mphs-block.txt
 
