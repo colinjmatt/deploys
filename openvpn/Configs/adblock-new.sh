@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 # Retrieve and sanitise hosts files from multiple sources and sanitises for use in dnsmasq
 
 dns="10.8.0.1" # Change to the IP that should be fetched when a blocked domain is requested
