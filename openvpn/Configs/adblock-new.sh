@@ -33,15 +33,7 @@ sed -i -e 1,14d pgly-block.txt
 
 # Remove hosts file IP entries
 sed -i -e " s/^0.0.0.0//
-            s/^127.0.0.1//" \
-            adaw-block.txt \
-            danp-block.txt \
-            mhka-block.txt \
-            mphs-block.txt \
-            mvps-block.txt \
-            mwdl-block.txt \
-            noco-block.txt \
-            pgly-block.txt
+            s/^127.0.0.1//" *
 
 # ALL FILES SANITATION
 # Use sed to perform the folloing (in order):
