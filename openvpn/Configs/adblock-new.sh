@@ -17,14 +17,20 @@ sed -i -e 1,85d danp-block.txt
 
 wget -qO mhka-block.txt http://adblock.mahakala.is/hosts
 
-wget -qO mphs-block.txt http://hosts-file.net/ad_servers.txt
-sed -i -e 1,24d mphs-block.txt
+wget -qO mphs-block-temp.txt http://hosts-file.net/ad_servers.txt
+sed -i -e 1,10d mphs-block-temp.txt
+tr -d '\r' < mphs-block-temp.txt > mphs-block.txt
+rm mphs-block-temp.txt
 
-wget -qO mvps-block.txt http://winhelp2002.mvps.org/hosts.txt
-sed -i -e 1,30d mvps-block.txt
+wget -qO mvps-block-temp.txt http://winhelp2002.mvps.org/hosts.txt
+sed -i -e 1,30d mvps-block-temp.txt
+tr -d '\r' < mvps-block-temp.txt > mvps-block.txt
+rm mvps-block-temp.txt
 
-wget -qO mwdl-block.txt http://www.malwaredomainlist.com/hostslist/hosts.txt
-sed -i -e 1,5d mwdl-block.txt
+wget -qO mwdl-block-temp.txt http://www.malwaredomainlist.com/hostslist/hosts.txt
+sed -i -e 1,5d mwdl-block-temp.txt
+tr -d '\r' < mwdl-block-temp.txt > mwdl-block.txt
+rm mwdl-block-temp.txt
 
 wget -qO noco-block.txt https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/hosts.txt
 sed -i -e 1,11d noco-block.txt
