@@ -9,33 +9,28 @@ fi
 mkdir -p /tmp/adblock
 ( cd /tmp/adblock || return
 
-wget -qO adaw-block.txt http://adaway.org/hosts.txt
+# Download and remove any CRLF line breaks from all lists
+wget -q -O- http://adaway.org/hosts.txt | tr -d "\r" >adaw-block.txt
 sed -i -e 1,24d adaw-block.txt
 
-wget -qO danp-block.txt http://someonewhocares.org/hosts/zero/hosts
+wget -q -O- http://someonewhocares.org/hosts/zero/hosts | tr -d "\r" >danp-block.txt
 sed -i -e 1,85d danp-block.txt
 
-wget -qO mhka-block.txt http://adblock.mahakala.is/hosts
+wget -q -O- http://adblock.mahakala.is/hosts | tr -d "\r" >mhka-block.txt
 
-wget -qO mphs-block-temp.txt http://hosts-file.net/ad_servers.txt
-sed -i -e 1,10d mphs-block-temp.txt
-tr -d '\r' < mphs-block-temp.txt > mphs-block.txt
-rm mphs-block-temp.txt
+wget -q -O- http://hosts-file.net/ad_servers.txt | tr -d "\r" >mphs-block.txt
+sed -i -e 1,10d mphs-block.txt
 
-wget -qO mvps-block-temp.txt http://winhelp2002.mvps.org/hosts.txt
-sed -i -e 1,30d mvps-block-temp.txt
-tr -d '\r' < mvps-block-temp.txt > mvps-block.txt
-rm mvps-block-temp.txt
+wget -q -O- http://winhelp2002.mvps.org/hosts.txt | tr -d "\r" >mvps-block.txt
+sed -i -e 1,30d mvps-block.txt
 
-wget -qO mwdl-block-temp.txt http://www.malwaredomainlist.com/hostslist/hosts.txt
-sed -i -e 1,5d mwdl-block-temp.txt
-tr -d '\r' < mwdl-block-temp.txt > mwdl-block.txt
-rm mwdl-block-temp.txt
+wget -q -O- http://www.malwaredomainlist.com/hostslist/hosts.txt | tr -d "\r" >mwdl-block.txt
+sed -i -e 1,5d mwdl-block.txt
 
-wget -qO noco-block.txt https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/hosts.txt
+wget -q -O- https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/hosts.txt | tr -d "\r" >noco-block.txt
 sed -i -e 1,11d noco-block.txt
 
-wget -qO pgly-block.txt 'http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext'
+wget -q -O- 'http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext' | tr -d "\r" >pgly-block.txt
 sed -i -e 1,14d pgly-block.txt
 
 # Remove hosts file IP entries
@@ -51,20 +46,22 @@ sed -i -e " s/^0.0.0.0//
             pgly-block.txt
 
 # ALL FILES SANITATION
-# Remove any whitespace at the start of any lines
+# Use sed to perform the folloing (in order):
+#  - remove any whitespace at the start of any lines
+#  - remove any text after and including #
+#  - delete all blank lines
+#  - add dnsmasq prefix
+#  - add dnsmasq suffix
+#  - sort, remove duplicates and merge all files in dnsmasq.adblock
 sed -i -e "s/^[ \t]*//" *
-# Remove any text after and including #
 sed -i -e "s/\#.*$//" *
-# Delete all blank lines
 sed -i -e "/^\s*$/d" *
-# add dnsmasq prefix
 sed -i -e "s/^/address=\//" *
-# add dnsmasq suffix
 sed -i -e "s/$/\/""$dns""/" *
-
 cat * | sort | sort -u >dnsmasq.adblock
 
 mv dnsmasq.adblock /etc/ )
 
+# Remove temp dir and restart dnsmasq
 rm -rf /tmp/adblock
 systemctl restart dnsmasq
