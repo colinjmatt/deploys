@@ -94,7 +94,7 @@ chown -R sonarr:sonarr /opt/nzbdrone /var/lib/sonarr
 
 # Install and configure radarr
 ( cd /tmp || return
-wget https://github.com/Radarr/Radarr/releases/download/v0.2.0.1344/Radarr.develop.0.2.0.1344.linux.tar.gz
+curl -s https://api.github.com/repos/Radarr/Radarr/releases | grep "browser_download_url".*Radarr.develop.*linux.tar.gz | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
 tar -zxf Radarr.develop.0.2.0.1344.linux.tar.gz -C /opt/ )
 mv /opt/Radarr /opt/radarr
 cat ./Configs/radarr.service >/etc/systemd/system/radarr.service
@@ -104,7 +104,7 @@ chown -R radarr:radarr /opt/radarr /var/lib/radarr
 
 # Install & configure jackett
 ( cd /tmp || return
-wget https://github.com/Jackett/Jackett/releases/download/v0.11.356/Jackett.Binaries.LinuxAMDx64.tar.gz
+curl -s https://api.github.com/repos/Jackett/Jackett/releases | grep "browser_download_url".*Jackett.Binaries.LinuxAMDx64.tar.gz | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
 tar -zxf Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt/ )
 mv /opt/Jackett /opt/jackett
 cat ./Configs/jackett.service >/etc/systemd/system/jackett.service
