@@ -32,7 +32,7 @@ mount /dev/"$installdrive"1 /mnt/boot
 swapon /dev/"$installdrive"2
 
 # Install base system
-pacstrap /mnt base base-devel openssh wget git haveged
+pacstrap /mnt base base-devel linux openssh wget nano git haveged
 
 # Copy mirrorlist to installed base system
 cp /mirrorlist /mnt/etc/pacman.d/

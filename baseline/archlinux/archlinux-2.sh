@@ -124,7 +124,7 @@ systemctl enable  haveged \
                   sshd
 
 # Enable networking
-netctl enable ethernet-static
+netctl enable ethernet-static haveged
 
 # Cleanup
 rm -rf /deploys /strap.sh
