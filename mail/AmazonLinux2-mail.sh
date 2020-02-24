@@ -209,7 +209,7 @@ systemctl enable    clamsmtpd \
                     postfix \
                     postgrey \
                     php-fpm \
-                    spamassassin \
+                    spamassassin
 
 rm -rf /tmp/*
 

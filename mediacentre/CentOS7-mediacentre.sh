@@ -31,7 +31,7 @@ done
 sed -i -e "s/dns-nameservers.*/dns-nameservers\ \ 1.1.1.1\ 1.0.0.1/g" /etc/network/interfaces
 
 # Add firewall rules & configure selinux
-ports="80 443 9091 55369" # port 9091 only if a client is to be used to access transmission
+ports="80 443 9091 32400 55369" # port 9091 only if a client is to be used to access transmission
 for port in $ports; do
     firewall-cmd --permanent --zone=drop --add-port="$port"/tcp
 done
@@ -81,6 +81,9 @@ chmod +x /usr/local/bin/download-unrar.sh
 rpm --import "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF"
 curl https://download.mono-project.com/repo/centos7-stable.repo | tee /etc/yum.repos.d/mono-centos7-stable.repo
 yum install mono-complete mediainfo libicu libcurl-devel bzip2 -y
+
+# Install Plex
+bash -c "$(wget -qO - https://raw.githubusercontent.com/mrworf/plexupdate/master/extras/installer.sh)"
 
 # Install & configure sonarr
 ( cd /tmp || return
