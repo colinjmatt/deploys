@@ -15,7 +15,7 @@ amazon-linux-extras install "$nginx" -y
 curl http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -o /tmp/epel-release-latest-7.noarch.rpm
 yum install /tmp/epel-release-latest-7.noarch.rpm -y
 yum install     certbot \
-                clamav clamsmtp \
+                clamd clamav clamav-milter \
                 dnsmasq \
                 dovecot dovecot-pigeonhole \
                 fail2ban \
@@ -51,8 +51,14 @@ sed -i -e "s/listen\ =.*/listen\ =\ \/var\/run\/php-fpm\/php-fpm.sock/g" /etc/ph
 sed -i -e "s/user\ =.*/user\ =\ nginx/g" /etc/php-fpm.d/www.conf
 sed -i -e "s/group\ =.*/group\ =\ nginx/g" /etc/php-fpm.d/www.conf
 
-# Configure clamsmtp
-cat ./Configs/clamsmtpd.conf >/etc/clamsmtpd.conf
+# Configure clamav
+cat ./Configs/clamsav-milter.conf >/etc/mail/clamav-milter.conf
+cat ./Configs/scan.conf >/etc/clamd.d/scan.conf
+mkdir /var/spool/postfix/clamav-milter
+usermod -a -G postfix clamilt
+chown clamilt:postfix var/spool/postfix/clamav-milter
+mkdir /var/log/clamd
+chown clamscan:virusgroup clamd
 freshclam
 
 # Configure dovecot
@@ -198,8 +204,8 @@ for port in $ports; do
 done
 
 # Enable EVERYTHING
-systemctl enable    clamsmtpd \
-                    clamsmtp-clamd \
+systemctl enable    clamav-milter \
+                    clamd@scan \
                     dovecot \
                     dnsmasq \
                     fail2ban \

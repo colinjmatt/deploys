@@ -57,12 +57,12 @@ smtpd_tls_security_level            = may
 smtpd_tls_exclude_ciphers           = aNULL, eNULL, EXPORT, DES, RC4, MD5, PSK, aECDH, EDH-DSS-DES-CBC3-SHA, EDH-RSA-DES-CBC3-SHA, KRB5-DES, CBC3-SHA
 smtpd_tls_dh1024_param_file          = /etc/ssl/dhparams.pem
 
-content_filter          = scan:[127.0.0.1]:10025
+#content_filter          = scan:[127.0.0.1]:10025
 policy-spf_time_limit  = 3600s
 milter_default_action  = accept
 milter_protocol        = 6
-smtpd_milters          = unix:opendkim/opendkim unix:opendmarc/opendmarc
-non_smtpd_milters      = unix:opendkim/opendkim unix:opendmarc/opendmarc
+smtpd_milters          = unix:opendkim/opendkim unix:opendmarc/opendmarc unix:clamav-milter/clamav-milter
+non_smtpd_milters      = unix:opendkim/opendkim unix:opendmarc/opendmarc unix:clamav-milter/clamav-milter
 
 smtpd_client_restrictions =
     permit_mynetworks,
