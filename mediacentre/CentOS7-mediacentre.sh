@@ -62,7 +62,6 @@ certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /usr
 cat ./Configs/post-certbot.conf >/etc/nginx/sites/download.conf
 sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/download.conf
 cat ./Configs/certbot-auto >/usr/local/bin/certbot-auto
-chmod +x /usr/local/bin/certbot-auto
 echo "@daily root /usr/local/bin/certbot-auto >/dev/null 2>&1" >/etc/cron.d/certbot
 
 # Install & configure transmission-daemon
@@ -75,7 +74,10 @@ sed -i -e " s/\$downcompletesed/""$downcompletesed""/g
             /var/lib/transmission/.config/transmission-daemon/settings.json
 chown -R transmission:transmission /var/lib/transmission/
 cat ./Configs/download-unrar.sh >/usr/local/bin/download-unrar.sh
-chmod +x /usr/local/bin/download-unrar.sh
+
+# Setup cleanup of transmission downloads
+cat ./Configs/download-cleanup.sh >/usr/local/bin/download-cleanup.sh
+echo "@daily root /usr/local/bin/download-cleanup.sh >/dev/null 2>&1" >/etc/cron.d/download-cleanup
 
 # Get required packages with a more recent version of mono
 rpm --import "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF"
@@ -114,6 +116,9 @@ cat ./Configs/jackett.service >/etc/systemd/system/jackett.service
 mkdir -p /var/lib/jackett/.config/Jackett
 echo -e "{\n  \"BasePathOverride\": \"/jackett\"\n}" >/var/lib/jackett/.config/Jackett/ServerConfig.json
 chown -R jackett:jackett /opt/jackett /var/lib/jackett
+
+# Everything in /usr/local/bin made to be executable
+chmod +x /usr/local/bin/*
 
 # Start services
 systemctl restart network \
