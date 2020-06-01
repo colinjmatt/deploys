@@ -70,7 +70,10 @@ for drive in /dev/mapper/vg*; do
     sed -i -e "s/HOOKS=.*/HOOKS=(base udev autodetect modconf block filesystems keyboard)/g" /etc/mkinitcpio.conf
   fi
 done
-mkinitcpio -p linux
+sed -i -e "s/#COMPRESSION=\"xz\"/COMPRESSION=\"xz\"/g; \
+           s/#COMPRESSION_OPTIONS=()/COMPRESSION_OPTIONS=(-0 -T 0)/g" \
+           /etc/mkinitcpio.conf
+mkinitcpio -P
 
 # Setup bootctl
 bootctl install
