@@ -64,6 +64,9 @@ sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/download.conf
 cat ./Configs/certbot-auto >/usr/local/bin/certbot-auto
 echo "@daily root /usr/local/bin/certbot-auto >/dev/null 2>&1" >/etc/cron.d/certbot
 
+# Generate Diffie Hellman
+openssl dhparam -out /etc/ssl/dhparams.pem 4096
+
 # Install & configure transmission-daemon
 yum install transmission-daemon -y
 mkdir -p /var/lib/transmission/.config/transmission-daemon/
