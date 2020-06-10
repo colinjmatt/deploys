@@ -4,8 +4,12 @@
 
 # FQDN of the server
 domain="example.com"
-# Password for transmission rpc
-transmissionpass="password"
+# Password for transmission rpc (needs to be single-quoted)
+transmissionpass='password'
+# Address to send errors to
+email="user@example.com"
+# Identity of sender (email or name)
+from="root@example.com"
 # Location of completed downloads
 downcomplete="\/downloads\/complete"
 downcompletesed=$(echo $downcomplete | sed 's/\//\\\//g')
@@ -80,6 +84,10 @@ cat ./Configs/download-unrar.sh >/usr/local/bin/download-unrar.sh
 
 # Setup cleanup of transmission downloads
 cat ./Configs/download-cleanup.sh >/usr/local/bin/download-cleanup.sh
+sed -i -e " s/\$transmissionpasssed/""$transmissionpass""/g
+            s/\$emailsed/""$email""/g
+            s/\$fromsed/""$from""/g" \
+            /usr/local/bin/download-cleanup.sh
 echo "@daily root /usr/local/bin/download-cleanup.sh >/dev/null 2>&1" >/etc/cron.d/download-cleanup
 
 # Get required packages with a more recent version of mono
@@ -119,6 +127,8 @@ cat ./Configs/jackett.service >/etc/systemd/system/jackett.service
 mkdir -p /var/lib/jackett/.config/Jackett
 echo -e "{\n  \"BasePathOverride\": \"/jackett\"\n}" >/var/lib/jackett/.config/Jackett/ServerConfig.json
 chown -R jackett:jackett /opt/jackett /var/lib/jackett
+
+echo "@weekly root /usr/local/bin/jackett-update.sh >/dev/null 2>&1" >/etc/cron.d/jackett-update
 
 # Everything in /usr/local/bin made to be executable
 chmod +x /usr/local/bin/*
