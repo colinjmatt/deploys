@@ -23,7 +23,7 @@ sed -i -e " s/\$domain/""$domain""/g
             /etc/dnsmasq.conf
 
 # Install and configure pixelserv
-wget -O /usr/local/bin/pixelserv.pl http://proxytunnel.sourceforge.net/files/pixelserv.pl.txt
+cat ./Configs/pixelserv.pl >/usr/local/bin/pixelserv.pl
 chmod +x /usr/local/bin/pixelserv.pl /usr/local/bin/adblock.sh
 cat ./Configs/pixelserv.service >/etc/systemd/system/pixelserv.service
 
