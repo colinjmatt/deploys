@@ -8,7 +8,7 @@ adblock="yes" # Change to anything but "yes" if ad blocking is not preferred
 # Disable as much logging as possible
 systemctl disable rsyslog systemd-journald systemd-journald.socket --now
 
-cat ./Configs/rsyslog-systemd.conf >/etc/rsyslog-systemd.conf
+cat ./Configs/rsyslog-systemd.conf >/etc/rsyslog.conf
 rm -rf /etc/rsyslog.d/*
 
 find /var/log/ -type f -name "*" -exec truncate -s 0 {} +
@@ -77,7 +77,7 @@ echo 1 | tee /proc/sys/net/ipv4/ip_forward
 firewall-cmd --permanent --zone=trusted --add-interface=tun0
 firewall-cmd --permanent --zone=trusted --add-interface=tun1
 
-# For openvpn
+# For openvpn - eth0 or main external interface should be in the DROP zone
 firewall-cmd --permanent --zone=drop --add-port=443/tcp
 firewall-cmd --permanent --zone=drop --add-port=1194/udp
 firewall-cmd --permanent --zone=drop --add-service openvpn
@@ -87,7 +87,7 @@ firewall-cmd --permanent --zone=drop --direct --passthrough ipv4 -t nat -A POSTR
 firewall-cmd --permanent --zone=drop --direct --passthrough ipv4 -t nat -A POSTROUTING -s 10.8.1.0/24 -o "$interface" -j MASQUERADE
 firewall-cmd --reload
 
-# Openvpn conifguration
+# Openvpn conifguration - Use UDP 1194 mainly but TCP 443 is good for restrictive newtorks. Looking at you, free wifi.
 cat ./Configs/server.conf >/etc/openvpn/tcpserver.conf
 cat ./Configs/server.conf >/etc/openvpn/udpserver.conf
 sed -i -e " s/port\ .*/port\ 1194/g
@@ -109,7 +109,7 @@ chmod +x /usr/local/bin/gen-ovpn
 # ADBLOCK SECTION
 if [[ $adblock == "yes" ]]; then
   # Install and configure pixelserv
-  wget -O /usr/local/bin/pixelserv.pl http://proxytunnel.sourceforge.net/files/pixelserv.pl.txt
+  cat ./Configs/pixelserv.pl >/usr/local/bin/pixelserv.pl
   cat ./Configs/pixelserv.service >/etc/systemd/system/pixelserv.service
 
   # Setup blocklist update script
@@ -117,7 +117,7 @@ if [[ $adblock == "yes" ]]; then
   cat ./Configs/adblock.service >/etc/systemd/system/adblock.service
   cat ./Configs/adblock.timer >/etc/systemd/system/adblock.timer
   chmod +x /usr/local/bin/pixelserv.pl /usr/local/bin/adblock.sh
-  wget -O /etc/dnsmasq.adblock 'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=dnsmasq&showintro=0&mimetype=plaintext'
+  /usr/local/bin/adblock.sh
   systemctl enable adblock.timer --now
   echo "conf-file=/etc/dnsmasq.adblock" >> /etc/dnsmasq/dnsmasq.conf
 fi
