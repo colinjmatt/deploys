@@ -1,5 +1,5 @@
 #!/bin/bash
-systemctl stop jacket
+systemctl stop jackett
 sleep 5
 
 mv /opt/jackett /opt/jackettold
@@ -12,4 +12,4 @@ chown -R jackett:jackett /opt/jackett
 
 rm -rf /opt/jackettold
 
-systemctl start jacket
+systemctl start jackett
