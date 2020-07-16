@@ -14,12 +14,15 @@ from="root@example.com"
 downcomplete='/Media/Downloads/Complete'
 #Location of incomplete downloads
 downincomplete='/Media/Downloads/Incomplete'
+# Location of films and TV shows
+tv='/Media/TV Shows'
+films='/Media/Films'
 
 # Create download directories
-mkdir -p $downcomplete
-chmod -R 0777 $downcomplete
-mkdir -p $downincomplete
-chmod -R 0777 $downincomplete
+mkdir -p "$downcomplete"; chmod -R 0777 "$downcomplete"
+mkdir -p "$downincomplete"; chmod -R 0777 "$downincomplete"
+mkdir -p "$tv"; chmod -R 0777 "$tv"
+mkdir -p "$films"; chmod -R 0777 "$films"
 
 # Ensure permissions for downloads and media are set... permissively
 cat ./configs/permissions.sh >/usr/local/bin/permissions.sh
