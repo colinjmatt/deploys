@@ -13,18 +13,26 @@ email="user@example.com"
 from="root@example.com"
 # Location of completed downloads
 downcomplete='/Media/Downloads/Complete'
-#Location of incomplete downloads
+# Location of incomplete downloads
 downincomplete='/Media/Downloads/Incomplete'
+# Location of films and TV shows
+tv='/Media/TV Shows'
+films='/Media/Films'
 
 # Create download directories
-mkdir -p "$downcomplete"
-chmod -R 0777 "$downcomplete"
-mkdir -p "$downincomplete"
-chmod -R 0777 "$downincomplete"
+mkdir -p "$downcomplete"; chmod -R 0777 "$downcomplete"
+mkdir -p "$downincomplete"; chmod -R 0777 "$downincomplete"
+mkdir -p "$tv"; chmod -R 0777 "$tv"
+mkdir -p "$films"; chmod -R 0777 "$films"
 
-# Ensure permissions are set... permissively
+# Ensure permissions for downloads and media are set... permissively
 cat ./configs/permissions.sh >/usr/local/bin/permissions.sh
 echo "*/5 * * * * root /usr/local/bin/permissions.sh" >/etc/cron.d/permissions
+sed -i -e " \
+  s/\$tv/""$tv""/g \
+  s/\$films/""$films""/g \
+  s/\$downcomplete/""$downcomplete""/g" \
+  /usr/local/bin/permissions.sh
 
 # Create service users
 users="sonarr radarr jackett"
