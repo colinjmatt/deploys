@@ -11,17 +11,24 @@ email="user@example.com"
 # Identity of sender (email or name)
 from="root@example.com"
 # Location of completed downloads
-downcomplete="\/downloads\/complete"
-downcompletesed=$(echo $downcomplete | sed 's/\//\\\//g')
+downcomplete='/Media/Downloads/Complete'
 #Location of incomplete downloads
-downincomplete="\/downloads\/incomplete"
-downincompletesed=$(echo $downincomplete | sed 's/\//\\\//g')
+downincomplete='/Media/Downloads/Incomplete'
 
 # Create download directories
 mkdir -p $downcomplete
 chmod -R 0777 $downcomplete
 mkdir -p $downincomplete
 chmod -R 0777 $downincomplete
+
+# Ensure permissions for downloads and media are set... permissively
+cat ./configs/permissions.sh >/usr/local/bin/permissions.sh
+echo "*/5 * * * * root /usr/local/bin/permissions.sh" >/etc/cron.d/permissions
+sed -i -e " \
+  s/\$tv/""$tv""/g \
+  s/\$films/""$films""/g \
+  s/\$downcomplete/""$downcomplete""/g" \
+  /usr/local/bin/permissions.sh
 
 # Create service users
 users="sonarr radarr jackett"
@@ -50,13 +57,16 @@ wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 yum install /tmp/epel-release-latest-7.noarch.rpm -y
 
 # Install rar/unrar
-wget  https://rarlab.com/rar/rarlinux-x64-5.7.1.tar.gz
-tar -zxf rarlinux-x64-5.7.1.tar.gz )
+( rarversion=$(curl -s https://www.rarlab.com/download.htm | grep "Linux x64" | awk -F ' ' '{print $2}')
+cd /tmp || return
+wget https://www.rarlab.com/rar/rarlinux-x64-"${rarversion::-1}"."${rarversion:3}".tar.gz
+tar -zxf rarlinux-x64-"${rarversion::-1}"."${rarversion:3}".tar.gz )
 cp /tmp/rar/rar /tmp/rar/unrar /usr/local/bin
 
 # Install & configure nginx with certbot certs
 yum install nginx certbot -y
 mkdir -p /usr/share/nginx/html/.well-known
+chmod 0755 /usr/share/nginx/html/.well-known/
 mkdir -p /etc/nginx/sites
 cat ./Configs/nginx.conf >/etc/nginx/nginx.conf
 cat ./Configs/pre-certbot.conf >/etc/nginx/sites/download.conf
@@ -75,19 +85,21 @@ openssl dhparam -out /etc/ssl/dhparams.pem 4096
 yum install transmission-daemon -y
 mkdir -p /var/lib/transmission/.config/transmission-daemon/
 cat ./Configs/settings.json >/var/lib/transmission/.config/transmission-daemon/settings.json
-sed -i -e " s/\$downcompletesed/""$downcompletesed""/g
-            s/\$downincompletesed/""$downincompletesed""/g
-            s/\$transmissionpass/""$transmissionpass""/g" \
-            /var/lib/transmission/.config/transmission-daemon/settings.json
+sed -i -e "\
+  s|\$downcompletesed|""$downcomplete""|g; \
+  s|\$downincompletesed|""$downincomplete""|g; \
+  s|\$transmissionpass|""$transmissionpass""|g" \
+/var/lib/transmission/.config/transmission-daemon/settings.json
 chown -R transmission:transmission /var/lib/transmission/
 cat ./Configs/download-unrar.sh >/usr/local/bin/download-unrar.sh
 
 # Setup cleanup of transmission downloads
 cat ./Configs/download-cleanup.sh >/usr/local/bin/download-cleanup.sh
-sed -i -e " s/\$transmissionpasssed/""$transmissionpass""/g
-            s/\$emailsed/""$email""/g
-            s/\$fromsed/""$from""/g" \
-            /usr/local/bin/download-cleanup.sh
+sed -i -e "\
+  s|\$transmissionpasssed|""$transmissionpass""|g; \
+  s|\$emailsed|""$email""|g; \
+  s|\$fromsed|""$from""|g" \
+/usr/local/bin/download-cleanup.sh
 echo "@daily root /usr/local/bin/download-cleanup.sh >/dev/null 2>&1" >/etc/cron.d/download-cleanup
 
 # Get required packages with a more recent version of mono
@@ -111,7 +123,7 @@ chown -R sonarr:sonarr /opt/nzbdrone /var/lib/sonarr
 # Install and configure radarr
 ( cd /tmp || return
 curl -s https://api.github.com/repos/Radarr/Radarr/releases | grep "browser_download_url".*Radarr.develop.*linux.tar.gz | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
-tar -zxf Radarr.develop.0.2.0.1344.linux.tar.gz -C /opt/ )
+tar -zxf Radarr.develop.*.linux.tar.gz -C /opt/ )
 mv /opt/Radarr /opt/radarr
 cat ./Configs/radarr.service >/etc/systemd/system/radarr.service
 mkdir -p /var/lib/radarr/.config/Radarr
@@ -128,6 +140,7 @@ mkdir -p /var/lib/jackett/.config/Jackett
 echo -e "{\n  \"BasePathOverride\": \"/jackett\"\n}" >/var/lib/jackett/.config/Jackett/ServerConfig.json
 chown -R jackett:jackett /opt/jackett /var/lib/jackett
 
+cat ./Configs/jackett-update.sh >/usr/local/bin/jackett-update.sh
 echo "@weekly root /usr/local/bin/jackett-update.sh >/dev/null 2>&1" >/etc/cron.d/jackett-update
 
 # Everything in /usr/local/bin made to be executable
