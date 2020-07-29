@@ -1,0 +1,12 @@
+[Unit]
+Description=Set /dev/null permissions
+After=rc-local.service
+Before=getty.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/chmod 0666 /dev/null
+
+[Install]
+WantedBy=multi-user.target

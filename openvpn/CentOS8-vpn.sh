@@ -18,7 +18,7 @@ do
   ln -sfn /dev/null "$log"
 done< <(find /var/log/ -type f -name "*" -print0)
 
-echo "chmod 0666 /dev/null" >>/etc/rc.d/rc.local
+cat ./Configs/dev-null.service >/etc/systemd/system/dev-null.service
 
 # Install packages
 yum install openvpn easy-rsa mailx dnsmasq -y
@@ -123,6 +123,7 @@ fi
 systemctl restart NetworkManager
 systemctl enable  openvpn-server@tcpserver \
                   openvpn-server@udpserver \
+                  dev-null \
                   dnsmasq \
                   pixelserv --now
 
