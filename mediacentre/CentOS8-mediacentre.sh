@@ -142,6 +142,10 @@ echo -e "{\n  \"BasePathOverride\": \"/jackett\"\n}" >/var/lib/jackett/.config/J
 chown -R jackett:jackett /opt/jackett /var/lib/jackett
 
 cat ./Configs/jackett-update.sh >/usr/local/bin/jackett-update.sh
+sed -i -e "\
+  s|\$emailsed|""$email""|g; \
+  s|\$fromsed|""$from""|g" \
+/usr/local/bin/jackett-update.sh
 echo "@weekly root /usr/local/bin/jackett-update.sh >/dev/null 2>&1" >/etc/cron.d/jackett-update
 
 # Everything in /usr/local/bin made to be executable
