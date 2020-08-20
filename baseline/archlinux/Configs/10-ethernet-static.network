@@ -1,0 +1,7 @@
+[Match]
+Name=$interface
+
+[Network]
+Address=$ipaddress
+Gateway=$gateway
+Domains=$domain
