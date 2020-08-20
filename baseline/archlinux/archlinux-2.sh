@@ -4,10 +4,6 @@ hostname="localhost" # single value
 users="user1 user2" # multiple values
 sudoers="user1 user2" # multiple values
 sshusers="user1 user2" # multiple values
-domain="localdomain" # single value
-ipaddress="0.0.0.0\/24" # single value, backslash is intentional
-dns="'0.0.0.0' '0.0.0.0'" # single-quoted multiple values
-gateway="0.0.0.0" # single value
 
 # Set region and locale
 rm /etc/localtime
@@ -19,15 +15,8 @@ export LANG=en_GB.UTF-8
 echo "KEYMAP=uk" > /etc/vconsole.conf
 
 # Create dhcp ethernet connection
-# $interface may be better expressed at echo /sys/class/net/en* | cut -d "/" -f 2 | xargs printf "/%s"
-# old expression is ls /sys/class/net/ | grep "^en"
-cat ./Configs/ethernet-static >/etc/netctl/ethernet-static
-sed -i -e "s/\$interface/""$(echo /sys/class/net/en* | cut -d / -f 5 | xargs printf %s)""/g; \
-           s/\$ipaddress/""$ipaddress""/g; \
-           s/\$gateway/""$gateway""/g; \
-           s/\$dns/""$dns""/g; \
-           s/\$domain/""$domain""/g" \
-           /etc/netctl/ethernet-static
+cat ./Configs/20-ethernet-dhcp.network >/etc/systemd/network/20-ethernet-dhcp.network
+sed -i -e "s/\$interface/""$(ls /sys/class/net/ | grep "^en")""/g" /etc/systemd/network/20-ethernet-dhcp.network
 
 # Set hostname
 hostname $hostname
@@ -109,10 +98,6 @@ cat ./Configs/systemd-fsck\@.service >/etc/systemd/system/systemd-fsck\@.service
 # Configure SSH
 cat ./Configs/sshd_config >/etc/ssh/sshd_config
 sed -i -e "s/\$sshusers/""$sshusers""/g" /etc/ssh/sshd_config
-
-# Install & configure nfs-utils
-pacman -S --noconfirm nfs-utils
-sed -i -e "s/#Domain\ =/Domain\ =\ ""$domain""/g" /etc/idmapd.conf
 
 # Set locale
 localectl set-keymap uk
