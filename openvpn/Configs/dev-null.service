@@ -1,7 +1,6 @@
 [Unit]
 Description=Set /dev/null permissions
-After=rc-local.service
-Before=getty.target
+After=getty.target
 
 [Service]
 Type=oneshot
