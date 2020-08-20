@@ -1,9 +1,0 @@
-Description='Ethernet'
-Interface=$interface
-Connection=ethernet
-IP=static
-Address=$ipaddress
-Gateway=$gateway
-DNSOptions=('resolv_conf_local_only=no')
-DNS=($dns)
-DNSSearch=$domain
