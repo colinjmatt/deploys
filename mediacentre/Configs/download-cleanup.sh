@@ -16,7 +16,7 @@ for id in $torrentlist
 do
     seedtime=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -t "$id" -i | grep "Seeding Time" | sed 's/.*(\(.*\) seconds)/\1/')
           if [ "$seedtime" -gt "$time" ]; then
-            transmission-remote -n "$transmissionuser":"$transmissionpass" -t $id --remove-and-delete
+            transmission-remote -n "$transmissionuser":"$transmissionpass" -t "$id" --remove-and-delete
           fi
 done
 
