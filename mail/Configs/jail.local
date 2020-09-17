@@ -6,7 +6,7 @@ action             = %(action_mwl)s
 backend            = auto
 banaction          = iptables-multiport
 banaction_allports = iptables-allports
-bantime            = 31536000
+bantime            = 2629800
 chain              = INPUT
 destemail          = postmaster@$domain
 enabled            = false
@@ -50,13 +50,6 @@ action_badips_report = badips[category="%(__name__)s", agent="%(fail2ban_agent)s
 #
 # SSH
 [sshd]
-filter   = sshd-aggressive
-port     = ssh
-logpath  = %(sshd_log)s
-backend  = %(sshd_backend)s
-enabled  = true
-
-[sshd-ddos]
 port     = ssh
 logpath  = %(sshd_log)s
 backend  = %(sshd_backend)s
