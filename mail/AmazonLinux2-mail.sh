@@ -52,7 +52,7 @@ sed -i -e "s/user\ =.*/user\ =\ nginx/g" /etc/php-fpm.d/www.conf
 sed -i -e "s/group\ =.*/group\ =\ nginx/g" /etc/php-fpm.d/www.conf
 
 # Configure clamav
-cat ./Configs/clamsav-milter.conf >/etc/mail/clamav-milter.conf
+cat ./Configs/clamav-milter.conf >/etc/mail/clamav-milter.conf
 cat ./Configs/scan.conf >/etc/clamd.d/scan.conf
 mkdir /var/spool/postfix/clamav-milter
 usermod -a -G postfix clamilt
@@ -132,7 +132,7 @@ else
 fi
 
 # Install certbot certs
-sed -i -e "s/nameserver.*/nameserver\ 208.67.220.220/g" /etc/resolv.conf
+sed -i -e "s/nameserver.*/nameserver\ 1.1.1.1/g" /etc/resolv.conf
 mkdir -p /var/www/html/.well-known
 systemctl enable nginx --now
 certbot certonly --register-unsafely-without-email --agree-tos --webroot -w /var/www/html/ -d $domain
