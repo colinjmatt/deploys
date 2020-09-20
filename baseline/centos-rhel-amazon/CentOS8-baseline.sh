@@ -17,6 +17,18 @@ sudoers="user1 user4"
 # Name of your timezone which can be found in /usr/share/zoneinfo/
 timezone="Europe/London"
 
+# Packages needed
+yum install firewalld -y
+
+# Create 2GB swapfile
+dd if=/dev/zero of=/mnt/swapfile bs=1M count=2048
+chown root:root /mnt/swapfile
+chmod 600 /mnt/swapfile
+mkswap /mnt/swapfile
+swapon /mnt/swapfile
+echo "/mnt/swapfile swap swap defaults 0 0" >> /etc/fstab
+swapon -a
+
 # Make /tmp temp filesystem
 echo "tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0" >> /etc/fstab
 
@@ -34,7 +46,8 @@ sed -i -e "s/\$sshusers/""$sshusers""/g" /etc/ssh/sshd_config
 systemctl reload sshd
 
 # Configure SSH firewall rules
-sed -i -e "s/AllowZoneDrifting=.*/AllowZoneDrifting=no/g"
+systemctl start firewalld
+sed -i -e "s/AllowZoneDrifting=.*/AllowZoneDrifting=no/g" /etc/firewalld/firewalld.conf
 firewall-cmd --permanent --zone=drop --change-interface=eth0
 firewall-cmd --permanent --zone=drop --add-rich-rule="
   rule family=\"ipv4\"
@@ -44,6 +57,9 @@ firewall-cmd --permanent --zone=drop --add-rich-rule="
   accept"
 firewall-cmd --reload
 systemctl restart firewalld
+
+# Disable IPv6
+echo "net.ipv6.conf.all.disable_ipv6=1" >/etc/sysctl.d/10-ipv6.conf
 
 # Configure .bashrc & .nanorc
 cat ./Configs/root_bashrc >/root/.bashrc
