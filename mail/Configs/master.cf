@@ -34,7 +34,7 @@ scache            unix  -       -       y       -       1       scache
 
 # pypolicyd-spf
 policy-spf        unix  -       n       n       -       -       spawn
-  user=nobody argv=/bin/python /usr/libexec/postfix/policyd-spf
+  user=nobody argv=/bin/python3 /usr/libexec/postfix/policyd-spf
 
 # spamassassin
 spamassassin      unix  -       n       n       -       -       pipe
