@@ -53,6 +53,8 @@ for port in $ports; do
 done
 firewall-cmd --reload
 
+sed -e "s/\<SELINUX=.*/SELINUX=enabled/g" /etc/selinux/config
+setenforce 1
 setsebool -P httpd_can_network_connect 1
 
 # Enable epel
