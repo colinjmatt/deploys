@@ -39,7 +39,6 @@ setgid_group           = postdrop
 default_privs          = nobody
 html_directory         = no
 biff                   = no
-readme_directory       = no
 
 smtpd_tls_cert_file     = /etc/letsencrypt/live/$domain/cert.pem
 smtpd_tls_key_file      = /etc/letsencrypt/live/$domain/privkey.pem
@@ -92,6 +91,6 @@ smtpd_recipient_restrictions =
     reject_rhsbl_reverse_client dbl.spamhaus.org,
     reject_rhsbl_helo dbl.spamhaus.org,
     reject_rhsbl_sender dbl.spamhaus.org,
-    check_policy_service unix:postgrey/socket,
+    check_policy_service unix:postgrey/postgrey,
     check_policy_service unix:private/policy-spf,
     permit
