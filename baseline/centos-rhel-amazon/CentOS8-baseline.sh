@@ -64,19 +64,18 @@ echo "net.ipv6.conf.all.disable_ipv6=1" >/etc/sysctl.d/10-ipv6.conf
 cat ./Configs/root_bashrc >/root/.bashrc
 cat ./Configs/nanorc >/etc/nanorc
 cat ./Configs/user_bashrc >/etc/skel/.bashrc
-for dir in $(ls -d /home/*/)
-do
-    cat ./Configs/user_bashrc >${dir}/.bashrc
+for dir in $(ls -d /home/*/); do
+  cat ./Configs/user_bashrc >${dir}/.bashrc
 done
 
 # Create users & passwords
 for name in $users ; do
-    useradd -m "$name"
-    echo -e "Password for $name\n"
-    passwd "$name"
+  useradd -m "$name"
+  echo -e "Password for $name\n"
+  passwd "$name"
 done
 
 # Add sudoers with password auth required for elevation
 for name in $sudoers ; do
-    echo "$name ALL=(ALL) ALL" >/etc/sudoers.d/"$name"
+  echo "$name ALL=(ALL) ALL" >/etc/sudoers.d/"$name"
 done
