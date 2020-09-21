@@ -64,13 +64,6 @@ do
     cat ./Configs/user_bashrc >${dir}/.bashrc
 done
 
-# Optimise motd if Amazon Linux
-if uname -r | grep amzn; then
-    update-motd --disable
-    cat ./Configs/motd >/etc/motd
-    sed -i -e "s/\$domain/""$domain""/g" /etc/motd
-fi
-
 # Create users & passwords
 for name in $users ; do
     useradd -m "$name"
