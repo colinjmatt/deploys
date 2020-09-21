@@ -56,7 +56,6 @@ firewall-cmd --permanent --zone=drop --add-rich-rule="
   port=\"22\"
   accept"
 firewall-cmd --reload
-systemctl restart firewalld
 
 # Disable IPv6
 echo "net.ipv6.conf.all.disable_ipv6=1" >/etc/sysctl.d/10-ipv6.conf
