@@ -5,7 +5,7 @@ domain="example.com" # Domain of the server
 subdomain="mail" # Subdomain used for mail
 
 # Configure selinux
-sed -e "s/SELINUX=.*/SELINUX=enabled/g" /etc/selinux/config
+sed -i -e "s/SELINUX=permissive/SELINUX=enabled/g" /etc/selinux/config
 setenforce 1
 setsebool -P httpd_can_network_connect 1
 
@@ -15,37 +15,37 @@ for port in $ports; do
     firewall-cmd --permanent --zone=drop --add-port="$port"/tcp
 done
 firewall-cmd --reload
-systemctl restart firewalld
-
-# Enable epel & Install packages
-yum install epel-release -y
-yum install     certbot \
-                clamd clamav clamav-milter \
-                dnsmasq \
-                dovecot dovecot-pigeonhole \
-                fail2ban \
-                mailx \
-                mysql mysql-server \
-                nginx \
-                opendkim opendmarc \
-                php php-json php-pdo php-xml \
-                postgrey \
-                spamassassin \
-                pypolicyd-spf \
-                whois \
-                zip unzip \
-                -y
-
-# Generate Diffie Hellman
-openssl dhparam -out /etc/ssl/dhparams.pem 4096
 
 # Set aliases
 cat ./Configs/aliases >/etc/aliases
 newaliases
 
+# Enable epel & Install packages
+yum install epel-release -y
+yum install \
+  certbot clamd clamav clamav-milter clamav-update \
+  dnsmasq dovecot dovecot-pigeonhole \
+  fail2ban \
+  mailx mysql mysql-server \
+  nginx \
+  opendkim opendmarc \
+  php php-json php-pdo php-xml postgrey pypolicyd-spf \
+  spamassassin \
+  whois \
+  zip unzip \
+  -y
+
+# Generate Diffie Hellman
+openssl dhparam -out /etc/ssl/dhparams.pem 4096
+
 # Make skel mail directories & insert sieve script
 mkdir -p /etc/skel/Maildir/{cur,new,tmp}
 cat ./Configs/dovecot-sieve >/etc/skel/.dovecot-sieve
+
+for dir in $(ls /home/); do
+  cp -r /etc/skel/* /home/"$dir"
+  chown -R "$dir":"$dir" /home/"$dir"
+done
 
 # Configure dnsmasq
 cat ./Configs/dnsmasq.conf >/etc/dnsmasq.conf
