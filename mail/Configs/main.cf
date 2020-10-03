@@ -12,8 +12,6 @@ inet_protocols         = all
 unknown_local_recipient_reject_code = 550
 alias_maps             = hash:/etc/aliases
 alias_database         = hash:/etc/aliases
-mime_header_checks     = regexp:/etc/postfix/header_checks
-header_checks          = regexp:/etc/postfix/header_checks
 
 home_mailbox           = Maildir/
 mailbox_transport      = lmtp:unix:private/dovecot-lmtp
@@ -21,6 +19,7 @@ mailbox_size_limit     = 5242880000
 message_size_limit     = 524288000
 recipient_delimiter    = +
 header_checks          = regexp:/etc/postfix/header_checks
+mime_header_checks     = regexp:/etc/postfix/header_checks
 smtpd_banner           = $myhostname ESMTP $mail_name
 
 sendmail_path          = /usr/sbin/sendmail.postfix
