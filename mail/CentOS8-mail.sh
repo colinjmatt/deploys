@@ -74,6 +74,19 @@ chown clamscan:virusgroup /var/log/clamd
 freshclam
 chmod 0644 /var/lib/clamav/daily.cld
 
+# Configure postfix
+cat ./Configs/postfix.service >/etc/systemd/system/postfix.service
+cat ./Configs/postfix-chroot-cp.sh >/usr/local/bin/postfix-chroot-cp.sh
+chmod +x /usr/local/bin/postfix-chroot-cp.sh
+cat ./Configs/main.cf >/etc/postfix/main.cf
+cat ./Configs/master.cf >/etc/postfix/master.cf
+cat ./Configs/policyd-spf.conf >/etc/python-policyd-spf/policyd-spf.conf
+cat ./Configs/helo_access >/etc/postfix/helo_access
+cat ./Configs/header_checks >/etc/postfix/header_checks
+cat ./Configs/sender_access >/etc/postfix/sender_access
+alternatives --set mta /usr/sbin/sendmail.postfix
+postconf compatibility_level=2
+
 # Configure dovecot
 cat ./Configs/dovecot.conf >/etc/dovecot/dovecot.conf
 cat ./Configs/10-auth.conf >/etc/dovecot/conf.d/10-auth.conf
@@ -84,18 +97,6 @@ cat ./Configs/15-mailboxes.conf >/etc/dovecot/conf.d/15-mailboxes.conf
 cat ./Configs/20-lmtp.conf >/etc/dovecot/conf.d/20-lmtp.conf
 cat ./Configs/20-imap.conf >/etc/dovecot/conf.d/20-imap.conf
 cat ./Configs/90-sieve.conf >/etc/dovecot/conf.d/90-sieve.conf
-
-# Configure postfix
-cat ./Configs/postfix.service >/etc/systemd/system/postfix.service
-cat ./Configs/postfix-chroot-cp.sh >/usr/local/bin/postfix-chroot-cp.sh
-chmod +x /usr/local/bin/postfix-chroot-cp.sh
-cat ./Configs/main.cf >/etc/postfix/main.cf
-cat ./Configs/master.cf >/etc/postfix/master.cf
-cat ./Configs/policyd-spf.conf >/etc/python-policyd-spf/policyd-spf.conf
-cat ./Configs/helo_access >/etc/postfix/helo_access
-cat ./Configs/header_checks >/etc/postfix/header_checks
-touch /etc/postfix/sender_access
-alternatives --set mta /usr/sbin/sendmail.postfix
 
 # Configure spamassassin
 cat ./Configs/local.cf >/etc/mail/spamassassin/local.cf
@@ -116,13 +117,12 @@ echo "*@$domain mail._domainkey.$subdomain.$domain" >/etc/opendkim/SigningTable
 mkdir -p /etc/opendkim/keys/"$subdomain"."$domain"
 opendkim-genkey -D /etc/opendkim/keys/"$subdomain"."$domain"/ -s mail -d "$subdomain"."$domain" # mail.txt will need to be entered into your domain configuration
 chown -R opendkim:opendkim /etc/opendkim/keys/
-chmod 0650 /etc/opendkim
-chmod 0650 /etc/opendkim/TrustedHosts
+chmod 0650 /etc/opendkim /etc/opendkim/TrustedHosts
 usermod -aG opendkim opendmarc
 mkdir -p /var/spool/postfix/{opendkim,opendmarc}/
 chown opendkim:root /var/spool/postfix/opendkim/
 chown opendmarc:root /var/spool/postfix/opendmarc/
-chmod 0755 opendkim opendmarc clamav-milter
+chmod 0755 /var/spool/postfix/{opendkim,opendmarc,clamav-milter}
 usermod -aG opendkim,opendmarc,clamilt postfix
 
 # Configure fail2ban
@@ -140,10 +140,10 @@ sed -i -e "\
 
 # Install certbot certs
 mkdir -p /var/www/"$subdomain"/.well-known
+cat ./Configs/index.html >/var/www/"$subdomain"/index.html
 chmod -R 0755 /var/www/"$subdomain"
 chown -R nginx:nginx /var/www/"$subdomain"
-cat ./Configs/index.html >/var/www/"$subdomain"/index.html
-systemctl enable nginx --now
+systemctl start nginx
 certbot certonly --register-unsafely-without-email --agree-tos --webroot -w /var/www/"$subdomain"/ -d "$subdomain"."$domain"
 cat ./Configs/certrenew.sh >/etc/cron.daily/certrenew.sh
 chmod +x /etc/cron.daily/certrenew.sh
@@ -157,19 +157,24 @@ sed -i -e "\
 
 # Populate all configs with $domain
 sed -i -e "s/\$domain/""$subdomain"".""$domain""/g" \
-  /etc/motd \
   /etc/dovecot/conf.d/10-ssl.conf \
-  /etc/dovecot/conf.d/20-lmtp.conf \
   /etc/postfix/main.cf \
+  /etc/opendkim.conf
+
+sed -i -e "s/\$domain/""$domain""/g" \
+  /etc/dovecot/conf.d/20-lmtp.conf \
   /etc/postfix/helo_access \
-  /etc/opendkim/TrustedHosts \
+  /etc/fail2ban/jail.local \
   /etc/opendmarc.conf \
-  /etc/fail2ban/jail.local
+  /etc/opendkim/TrustedHosts
+
+  sed -i -e "s/\$subdomain/""$subdomain""/g" \
+    /etc/opendmarc.conf
 
 # Map access and checks for postfix
-postmap /etc/postfix/sender_access
-postmap /etc/postfix/helo_access
-postmap /etc/postfix/header_checks
+postmap hash:/etc/postfix/sender_access
+postmap hash:/etc/postfix/helo_access
+postmap hash:/etc/postfix/header_checks
 
 # Rainloop webmail server configuration
 curl https://www.rainloop.net/repository/webmail/rainloop-latest.zip -o /tmp/rainloop-latest.zip
@@ -193,6 +198,7 @@ systemctl enable    clamav-milter \
                     dovecot \
                     fail2ban \
                     mysqld \
+                    nginx \
                     opendmarc \
                     opendkim \
                     postfix \
