@@ -16,10 +16,6 @@ for port in $ports; do
 done
 firewall-cmd --reload
 
-# Set aliases
-cat ./Configs/aliases >/etc/aliases
-newaliases
-
 # Enable epel & Install packages
 yum install epel-release -y
 yum install \
@@ -34,6 +30,10 @@ yum install \
   whois \
   zip unzip \
   -y
+
+# Set aliases
+cat ./Configs/aliases >/etc/aliases
+newaliases
 
 # Generate Diffie Hellman
 openssl dhparam -out /etc/ssl/dhparams.pem 4096
@@ -53,7 +53,6 @@ echo "supersede domain-name-servers 127.0.0.1;" >>/etc/dhcp/dhclient.conf
 echo "DNS1=127.0.0.1" >>/etc/sysconfig/network-scripts/ifcfg-eth0
 sed -i -e "s/nameserver.*/nameserver\ 127.0.0.1/g" /etc/resolv.conf
 cat ./Configs/dns.conf >/etc/NetworkManager/conf.d/dns.conf
-systemctl start dnsmasq
 systemctl restart NetworkManager
 
 # configure php-fpm
@@ -72,7 +71,7 @@ chown clamilt:postfix /var/spool/postfix/clamav-milter
 mkdir /var/log/clamd
 chown clamscan:virusgroup /var/log/clamd
 freshclam
-chmod 0644 /var/lib/clamav/daily.cld
+chmod -R 0644 /var/lib/clamav/*
 
 # Configure postfix
 cat ./Configs/postfix.service >/etc/systemd/system/postfix.service
@@ -158,18 +157,19 @@ sed -i -e "\
 # Populate all configs with $domain
 sed -i -e "s/\$domain/""$subdomain"".""$domain""/g" \
   /etc/dovecot/conf.d/10-ssl.conf \
-  /etc/postfix/main.cf \
   /etc/opendkim.conf
 
 sed -i -e "s/\$domain/""$domain""/g" \
   /etc/dovecot/conf.d/20-lmtp.conf \
   /etc/postfix/helo_access \
   /etc/fail2ban/jail.local \
+  /etc/postfix/main.cf \
   /etc/opendmarc.conf \
   /etc/opendkim/TrustedHosts
 
-  sed -i -e "s/\$subdomain/""$subdomain""/g" \
-    /etc/opendmarc.conf
+sed -i -e "s/\$subdomain/""$subdomain""/g" \
+  /etc/postfix/main.cf \
+  /etc/opendmarc.conf
 
 # Map access and checks for postfix
 postmap hash:/etc/postfix/sender_access
@@ -187,7 +187,7 @@ sed -i -e "s/index.html/index.php/g" /etc/nginx/sites/"$subdomain"."$domain".con
 # MySQL configuration
 systemctl start mysqld
 mysql_secure_installation
-mysql -u root < ./Configs/rainloop.sql -p;
+mysql -u root < ./Configs/rainloop.sql -p; # Password in this file will likely need editing before running
 
 # PHP max file upload size 1GB
 sed -i -e "s/upload_max_filesize\ =.*/upload_max_filesize\ =\ 1024M/g" /etc/php.ini
