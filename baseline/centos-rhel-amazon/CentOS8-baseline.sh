@@ -4,8 +4,6 @@
 
 # Name of the server
 hostname="example-server"
-# FQDN of the server
-domain="example.com"
 # List of user accounts to create
 users="user1 user2 user3 user4 user5"
 # List of the above users allowed to SSH to the server
@@ -65,7 +63,7 @@ cat ./Configs/root_bashrc >/root/.bashrc
 cat ./Configs/nanorc >/etc/nanorc
 cat ./Configs/user_bashrc >/etc/skel/.bashrc
 for dir in $(ls -d /home/*/); do
-  cat ./Configs/user_bashrc >${dir}/.bashrc
+  cat ./Configs/user_bashrc >"${dir}"/.bashrc
 done
 
 # Create users & passwords
