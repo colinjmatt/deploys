@@ -1,4 +1,4 @@
-myhostname             = $domain
+myhostname             = $subdomain.$domain
 mydomain               = $domain
 myorigin               = $domain
 mydestination          = $myhostname, localhost.$mydomain, localhost, $mydomain
