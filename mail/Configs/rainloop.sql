@@ -1,7 +1,7 @@
 create database rainloopdb;
 
 create user 'rainloopuser'
-  identified by 'rainlooppassword'; --choose a sensible password here if you want to change it
+  identified by '$rainlooppassword';
 
 grant all privileges
   on rainloopdb.*
