@@ -3,6 +3,7 @@
 
 domain="example.com" # Domain of the server
 subdomain="mail" # Subdomain used for mail
+rainlooppassword="" # Needs a sensibly secure password for mysql
 
 # Configure selinux
 sed -i -e "s/SELINUX=permissive/SELINUX=enabled/g" /etc/selinux/config
@@ -187,7 +188,8 @@ sed -i -e "s/index.html/index.php/g" /etc/nginx/sites/"$subdomain"."$domain".con
 # MySQL configuration
 systemctl start mysqld
 mysql_secure_installation
-mysql -u root < ./Configs/rainloop.sql -p; # Password in this file will likely need editing before running
+sed -i -e "s/\$rainlooppassword/""$rainlooppassword""/g" ./Configs/rainloop.sql
+mysql -u root < ./Configs/rainloop.sql -p;
 
 # PHP max file upload size 1GB
 sed -i -e "s/upload_max_filesize\ =.*/upload_max_filesize\ =\ 1024M/g" /etc/php.ini
