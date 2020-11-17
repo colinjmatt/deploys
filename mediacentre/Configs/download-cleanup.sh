@@ -8,7 +8,7 @@ email="$emailsed"
 from="$fromsed"
 
 # Time in days to seed for
-time=$((86400*15))
+time=$((86400*21))
 
 # Get list of torrent IDs, then remove and delete if seed time is greater than what $time is set to
 torrentlist=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | sed -e '1d' -e '$d' | awk '{print $1}' | sed -e 's/[^0-9]*//g')
