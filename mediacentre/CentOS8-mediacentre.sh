@@ -124,9 +124,12 @@ echo -e "<Config>\n  <UrlBase>/sonarr</UrlBase>\n</Config>" >/var/lib/sonarr/.co
 chown -R sonarr:sonarr /opt/nzbdrone /var/lib/sonarr
 
 # Install and configure radarr
+# ( cd /tmp || return
+# curl -s https://api.github.com/repos/Radarr/Radarr/releases | grep "browser_download_url".*Radarr.develop.*linux.tar.gz | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
+# tar -zxf Radarr.develop.*.linux.tar.gz -C /opt/ )
 ( cd /tmp || return
-curl -s https://api.github.com/repos/Radarr/Radarr/releases | grep "browser_download_url".*Radarr.develop.*linux.tar.gz | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
-tar -zxf Radarr.develop.*.linux.tar.gz -C /opt/ )
+wget --content-disposition 'http://radarr.servarr.com/v1/update/master/updatefile?os=linux&runtime=netcore&arch=x64'
+tar -zxf Radarr*.linux-core-x64.tar.gz -C /opt/ )
 mv /opt/Radarr /opt/radarr
 cat ./Configs/radarr.service >/etc/systemd/system/radarr.service
 mkdir -p /var/lib/radarr/.config/Radarr
