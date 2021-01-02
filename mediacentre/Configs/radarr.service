@@ -4,7 +4,7 @@ Description=Radarr
 [Service]
 User=radarr
 Group=radarr
-ExecStart=/usr/bin/mono /opt/radarr/Radarr.exe
+ExecStart=/opt/radarr/Radarr -nobrowser
 Restart=always
 RestartSec=5
 
