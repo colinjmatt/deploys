@@ -31,10 +31,10 @@ downloadsactive=$(transmission-remote -n "$transmissionuser":"$transmissionpass"
 downloadstodelete=$(echo "$downloadstotal" | grep -Fxv "$downloadsactive" | tr '\n' ' ')
 
 # Check that the active downloads returned are present in the total downloads counted otherwise there's something wrong with the data
-if [ -z "$downloadstodelete" ]; then
-  if [ -z "$(echo "$downloadsactive" | grep -Fxv "$downloadstotal")" ]; then
+if [ -n "$downloadstodelete" ]; then
+  if [ -n "$(echo "$downloadsactive" | grep "$downloadstotal")" ]; then
     (cd /Media/Downloads/Complete || exit
-    echo "$downloadstodelete" | xargs rm)
+    echo "$downloadstodelete" | xargs rm -rf)
   else
     echo "There are no active downloads matched to total downloads. Something is wrong." | \
     mail -s "The Plex download deletion script has failed" \
