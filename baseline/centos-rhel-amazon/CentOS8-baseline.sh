@@ -19,7 +19,7 @@ timezone="Europe/London"
 yum install firewalld -y
 
 # Create 2GB swapfile
-dd if=/dev/zero of=/mnt/swapfile bs=1M count=2048
+dd if=/dev/zero of=/mnt/swapfile bs=1M count=4096
 chown root:root /mnt/swapfile
 chmod 600 /mnt/swapfile
 mkswap /mnt/swapfile
