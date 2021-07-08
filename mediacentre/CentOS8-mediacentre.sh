@@ -98,6 +98,7 @@ chown -R transmission:transmission /var/lib/transmission/
 cat ./Configs/download-unrar.sh >/usr/local/bin/download-unrar.sh
 
 # Setup cleanup of transmission downloads
+yum install sendmail -y
 cat ./Configs/download-cleanup.sh >/usr/local/bin/download-cleanup.sh
 sed -i -e "\
   s|\$transmissionpasssed|""$transmissionpass""|g; \
@@ -161,6 +162,7 @@ systemctl restart NetworkManager \
                   nginx
 systemctl enable  transmission-daemon \
                   sonarr \
+                  sendmail \
                   radarr \
                   jackett --now
 
