@@ -4,8 +4,8 @@ transmissionuser='transmission-daemon'
 transmissionpass='$transmissionpasssed'
 
 # Destination email and FROM address for emailing any errors
-email="$emailsed"
-from="$fromsed"
+email="$emailsed" # Email address of the recipient
+from="$fromsed" # Email address of the sender
 
 # Time in days to seed for
 time=$((86400*21))
@@ -22,7 +22,16 @@ done
 
 IFS='/'
 # Total counted downloads
-downloadstotal=$(cd /Media/Downloads/Complete || exit; find -- * -maxdepth 0 | sed "s/^/'/;s/$/'/")
+for download in /Media/Downloads/Complete/*
+do
+  if [ -e "$download" ]
+  then
+    downloadstotal=$(cd /Media/Downloads/Complete || exit; find -- * -maxdepth 0 | sed "s/^/'/;s/$/'/")
+    break
+  else
+    downloadstotal=""
+  fi
+done
 
 # Acive downloads counted
 downloadsactive=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | awk -F 'Idle         ' ' {print $2}' | tail -n +2 | head -n -1 | sed "s/^/'/;s/$/'/")
@@ -31,8 +40,8 @@ downloadsactive=$(transmission-remote -n "$transmissionuser":"$transmissionpass"
 downloadstodelete=$(echo "$downloadstotal" | grep -Fxv "$downloadsactive" | tr '\n' ' ')
 
 # Check that the active downloads returned are present in the total downloads counted otherwise there's something wrong with the data
-if [ -n "$downloadstodelete" ]; then
-  if [ -n "$(echo "$downloadsactive" | grep "$downloadstotal")" ]; then
+if [[ $downloadstodelete = *[!\ ]* ]]; then
+  if [ -z "$(echo "$downloadsactive" | grep "$downloadstotal")" ]; then
     (cd /Media/Downloads/Complete || exit
     echo "$downloadstodelete" | xargs rm -rf)
   else
@@ -40,6 +49,7 @@ if [ -n "$downloadstodelete" ]; then
     mail -s "The Plex download deletion script has failed" \
          -r "$from" \
          "$email"
+    exit 1
   fi
 fi
 unset IFS
