@@ -1,7 +1,7 @@
 #!/bin/bash
 # Destination email and FROM address for emailing any errors
-email="emailsed"
-from="fromsed"
+email="$emailsed"
+from="$fromsed"
 
 x=""
 
