@@ -39,8 +39,8 @@ downloadsactive=$(transmission-remote -n "$transmissionuser":"$transmissionpass"
 # Any counted downloads that aren't active and can therefore be deleted
 downloadstodelete=$(echo "$downloadstotal" | grep -Fxv "$downloadsactive" | tr '\n' ' ')
 
-# Check that the active downloads returned are present in the total downloads counted otherwise there's something wrong with the data
-if [[ $downloadstodelete = *[!\ ]* ]]; then
+# Check there are downloads to delete and if so, that the active downloads returned are present in the total downloads counted otherwise there's something wrong with the data
+case $downloadstodelete in *[![:space:]]*)
   if [ -z "$(echo "$downloadsactive" | grep "$downloadstotal")" ]; then
     (cd /Media/Downloads/Complete || exit
     echo "$downloadstodelete" | xargs rm -rf)
@@ -51,5 +51,5 @@ if [[ $downloadstodelete = *[!\ ]* ]]; then
          "$email"
     exit 1
   fi
-fi
+esac
 unset IFS
