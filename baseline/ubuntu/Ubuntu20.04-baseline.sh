@@ -39,7 +39,8 @@ echo "$hostname" > /etc/hostname
 hostname $hostname
 
 # Disable IPv6
-echo "net.ipv6.conf.all.disable_ipv6=1" >/etc/sysctl.d/10-ipv6.conf
+echo -e 'net.ipv6.conf.all.disable_ipv6=1\nnet.ipv6.conf.default.disable_ipv6=1\nnet.ipv6.conf.lo.disable_ipv6=1' >/etc/sysctl.d/10-ipv6.conf
+sysctl -p
 
 # Configure .bashrc & .nanorc
 cat ./Configs/root_bashrc >/root/.bashrc
