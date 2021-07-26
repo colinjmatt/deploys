@@ -26,16 +26,16 @@ mkdir -p "$tv"; chmod -R 0777 "$tv"
 mkdir -p "$films"; chmod -R 0777 "$films"
 
 # Ensure permissions for downloads and media are set... permissively
-cat ./configs/permissions.sh >/usr/local/bin/permissions.sh
+cat ./Configs/permissions.sh >/usr/local/bin/permissions.sh
 echo "*/5 * * * * root /usr/local/bin/permissions.sh" >/etc/cron.d/permissions
-sed -i -e " \
-  s/\$tv/""$tv""/g \
-  s/\$films/""$films""/g \
-  s/\$downcomplete/""$downcomplete""/g" \
-  /usr/local/bin/permissions.sh
+sed -i -e "\
+  s|\$tv|""$tv""|g; \
+  s|\$films|""$films""|g; \
+  s|\$downcomplete|""$downcomplete""|g" \
+/usr/local/bin/permiss
 
 # Create service users
-users="sonarr radarr jackett"
+users="sonarr radarr jackett transmission"
 for name in $users ; do
     groupadd -r "$name"
     useradd -m -r -g "$name" -d /var/lib/"$name" "$name"
@@ -77,8 +77,8 @@ cat ./Configs/pre-certbot.conf >/etc/nginx/sites/download.conf
 sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/download.conf
 systemctl enable nginx --now
 certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /usr/share/nginx/html -d "$domain"
-cat ./Configs/post-certbot.conf >/etc/nginx/sites/download.conf
-sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/download.conf
+cat ./Configs/post-certbot.conf >/etc/nginx/sites/mediacentre.conf
+sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/mediacentre.conf
 cat ./Configs/certbot-auto >/usr/local/bin/certbot-auto
 echo "@daily root /usr/local/bin/certbot-auto >/dev/null 2>&1" >/etc/cron.d/certbot
 
@@ -147,6 +147,7 @@ mkdir -p /var/lib/jackett/.config/Jackett
 echo -e "{\n  \"BasePathOverride\": \"/jackett\"\n}" >/var/lib/jackett/.config/Jackett/ServerConfig.json
 chown -R jackett:jackett /opt/jackett /var/lib/jackett
 
+# Jackett updater
 cat ./Configs/jackett-update.sh >/usr/local/bin/jackett-update.sh
 sed -i -e "\
   s|\$emailsed|""$email""|g; \
