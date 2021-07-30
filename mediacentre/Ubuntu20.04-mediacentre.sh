@@ -59,8 +59,8 @@ mkdir -p /usr/share/nginx/html/.well-known
 chmod 0755 /usr/share/nginx/html/.well-known/
 mkdir -p /etc/nginx/sites
 cat ./Configs/nginx.conf >/etc/nginx/nginx.conf
-cat ./Configs/pre-certbot.conf >/etc/nginx/sites/download.conf
-sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/download.conf
+cat ./Configs/pre-certbot.conf >/etc/nginx/sites/mediacentre.conf
+sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/mediacentre.conf
 useradd -r nginx
 systemctl enable nginx --now
 certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /usr/share/nginx/html -d "$domain"
@@ -148,7 +148,6 @@ systemctl restart systemd-resolved \
                   nginx
 systemctl enable  transmission-daemon \
                   sonarr \
-                  sendmail \
                   radarr \
                   jackett --now
 
