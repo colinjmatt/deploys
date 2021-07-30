@@ -97,6 +97,8 @@ mkdir -p /etc/openvpn/template-profiles
 mkdir -p /etc/openvpn/client-profiles
 cat ./Configs/profile.ovpn >/etc/openvpn/template-profiles/profile.ovpn
 sed -i -e "s/\$domain/""$domain""/g" /etc/openvpn/template-profiles/profile.ovpn
+systemctl start openvpn-server@tcpserver \
+                openvpn-server@udpserver
 
 # Copy cert & ovpn profile generator script
 cat ./Configs/gen-ovpn >/usr/local/bin/gen-ovpn
@@ -113,7 +115,7 @@ if [[ $adblock == "yes" ]]; then
   cat ./Configs/adblock.service >/etc/systemd/system/adblock.service
   cat ./Configs/adblock.timer >/etc/systemd/system/adblock.timer
   chmod +x /usr/local/bin/pixelserv.pl /usr/local/bin/adblock.sh
-  /usr/local/bin/adblock.sh
+  . /usr/local/bin/adblock.sh
   systemctl enable adblock.timer --now
   echo "conf-file=/etc/dnsmasq.adblock" >> /etc/dnsmasq/dnsmasq.conf
 fi
