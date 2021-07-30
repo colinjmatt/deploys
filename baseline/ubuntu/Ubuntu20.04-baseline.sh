@@ -16,7 +16,7 @@ sudoers="user1 user4"
 timezone="Europe/London"
 
 # Packages needed
-apt-get -y install firewalld
+apt-get -y install firewalld curl
 
 # Create 4GB swapfile
 dd if=/dev/zero of=/mnt/swapfile bs=1M count=4096
