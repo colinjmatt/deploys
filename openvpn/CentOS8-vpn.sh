@@ -2,7 +2,7 @@
 # OpenVPN server deployment with optional ad blocking functionality using CentOS 8
 
 domain="example.com" # FQDN of the server
-dns="1.1.1.1 1.0.0.1" # List of nameservers to be used
+dns="1.1.1.1 8.8.8.8 1.0.0.1 8.8.4.4" # List of nameservers to be used
 adblock="yes" # Change to anything but "yes" if ad blocking is not preferred
 
 # Disable as much logging as possible
@@ -96,7 +96,7 @@ sed -i -e " s/port\ .*/port\ 1194/g
 mkdir -p /etc/openvpn/template-profiles
 mkdir -p /etc/openvpn/client-profiles
 cat ./Configs/profile.ovpn >/etc/openvpn/template-profiles/profile.ovpn
-sed -i -e "s/\$domain/""$domain""/g" /etc/openvpn/template-profiles/profile.ovp
+sed -i -e "s/\$domain/""$domain""/g" /etc/openvpn/template-profiles/profile.ovpn
 
 # Copy cert & ovpn profile generator script
 cat ./Configs/gen-ovpn >/usr/local/bin/gen-ovpn
