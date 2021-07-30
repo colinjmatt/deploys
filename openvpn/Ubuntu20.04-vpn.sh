@@ -21,13 +21,13 @@ done< <(find /var/log/ -type f -name "*" -print0)
 cat ./Configs/dev-null.service >/etc/systemd/system/dev-null.service
 
 # Install packages
-apt-get -y install openvpn easy-rsa bsd-mailx dnsmasq
+apt-get -y install openvpn easy-rsa mailutils dnsmasq
 
 # Configure dnsmasq
 cat ./Configs/dnsmasq.conf >/etc/dnsmasq.conf
 systemctl disable systemd-resolved --now
 rm /etc/resolv.conf
-echo "nameserver 1.1.1.1" >/etc/resolv.conf
+echo "nameserver 127.0.0.1" >/etc/resolv.conf
 for ip in $dns; do
   echo "server=$ip" >>/etc/dnsmasq.conf
 done
@@ -58,7 +58,7 @@ cp /etc/easy-rsa/pki/private/vpn-server.key /etc/openvpn/server/
 cp /etc/easy-rsa/pki/issued/vpn-server.crt /etc/openvpn/server/ )
 
 # Enable ip forwarding & firewall hardening rules
-echo "net.ipv4.ip_forward = 1" >/etc/sysctl.conf
+echo "net.ipv4.ip_forward = 1" >>/etc/sysctl.conf
 echo 1 | tee /proc/sys/net/ipv4/ip_forward
 
 # For dnsmasq
@@ -78,17 +78,21 @@ firewall-cmd --reload
 # Openvpn conifguration - Use UDP 1194 mainly but TCP 443 is good for restrictive newtorks. Looking at you, free wifi.
 cat ./Configs/server.conf >/etc/openvpn/server/tcpserver.conf
 cat ./Configs/server.conf >/etc/openvpn/server/udpserver.conf
-sed -i -e " s/port\ .*/port\ 1194/g
-            s/proto\ .*/proto\ udp4/g
-            s/dev\ .*/dev\ tun1/g
-            s/10.8.0/10.8.1/g " \
-            /etc/openvpn/server/udpserver.conf
+sed -i -e " \
+  s/port\ .*/port\ 1194/g;
+  s/proto\ .*/proto\ udp4/g;
+  s/dev\ .*/dev\ tun1/g;
+  s/10.8.0/10.8.1/g; \
+  s/explicit-exit-notify .*/explicit-exit-notify\ 1/g " \
+/etc/openvpn/server/udpserver.conf
 
 # Client .ovpn profile
 mkdir -p /etc/openvpn/template-profiles
 mkdir -p /etc/openvpn/client-profiles
 cat ./Configs/profile.ovpn >/etc/openvpn/template-profiles/profile.ovpn
 sed -i -e "s/\$domain/""$domain""/g" /etc/openvpn/template-profiles/profile.ovpn
+systemctl start openvpn-server@tcpserver \
+                openvpn-server@udpserver
 
 # Copy cert & ovpn profile generator script
 cat ./Configs/gen-ovpn >/usr/local/bin/gen-ovpn
@@ -105,14 +109,14 @@ if [[ $adblock == "yes" ]]; then
   cat ./Configs/adblock.service >/etc/systemd/system/adblock.service
   cat ./Configs/adblock.timer >/etc/systemd/system/adblock.timer
   chmod +x /usr/local/bin/pixelserv.pl /usr/local/bin/adblock.sh
-  /usr/local/bin/adblock.sh
+  . /usr/local/bin/adblock.sh
   systemctl enable adblock.timer --now
   echo "conf-file=/etc/dnsmasq.adblock" >> /etc/dnsmasq.conf
 fi
 # END ABLOCK SECTION
 
 # Enable and start everything
-systemctl restart NetworkManager
+systemctl restart netplan
 systemctl enable  openvpn-server@tcpserver \
                   openvpn-server@udpserver \
                   dev-null \
