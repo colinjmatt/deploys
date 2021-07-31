@@ -21,7 +21,7 @@ done< <(find /var/log/ -type f -name "*" -print0)
 cat ./Configs/dev-null.service >/etc/systemd/system/dev-null.service
 
 # Install packages
-apt-get -y install openvpn easy-rsa mailutils dnsmasq
+apt-get -y install openvpn easy-rsa sendemail dnsmasq
 
 # Configure dnsmasq
 cat ./Configs/dnsmasq.conf >/etc/dnsmasq.conf
@@ -92,7 +92,8 @@ mkdir -p /etc/openvpn/client-profiles
 cat ./Configs/profile.ovpn >/etc/openvpn/template-profiles/profile.ovpn
 sed -i -e "s/\$domain/""$domain""/g" /etc/openvpn/template-profiles/profile.ovpn
 systemctl start openvpn-server@tcpserver \
-                openvpn-server@udpserver
+                openvpn-server@udpserver \
+                dnsmasq
 
 # Copy cert & ovpn profile generator script
 cat ./Configs/gen-ovpn >/usr/local/bin/gen-ovpn
@@ -116,15 +117,11 @@ fi
 # END ABLOCK SECTION
 
 # Enable and start everything
-systemctl restart netplan
 systemctl enable  openvpn-server@tcpserver \
                   openvpn-server@udpserver \
                   dev-null \
                   dnsmasq \
                   pixelserv --now
-
-# Just in case dnsmasq starts up too soon and can't listen on the VPN addresses
-systemctl restart dnsmasq
 
 # OPTIONAL - Run:
 # systemctl edit --full dnsmasq
