@@ -1,23 +1,17 @@
 #!/bin/bash
 # Media server deployment using CentOS 8
 
-# FQDN of the server
-domain="example.com"
-# Name of non-root user to install Plex as (usually the user you will ssh with)
-$user="user1"
-# Password for transmission rpc (needs to be single-quoted)
-transmissionpass='password'
-# Address to send errors to
-email="user@example.com"
-# Identity of sender (email or name)
-from="root@example.com"
-# Location of completed downloads
-downcomplete='/Media/Downloads/Complete'
-# Location of incomplete downloads
-downincomplete='/Media/Downloads/Incomplete'
-# Location of films and TV shows
-tv='/Media/TV Shows'
-films='/Media/Films'
+domain="example.com" # FQDN of the server
+user="user1" # Name of non-root user to install Plex as (usually the user you will ssh with)
+transmissionpass='password' # Password for transmission rpc (needs to be single-quoted)
+email="user@example.com" # Address to send errors to
+from="root@example.com" # email address of sender
+fromname="Plex Server" # Friendly name for sender
+relaydomain="example.com" # FQDN of email relay
+downcomplete='/Media/Downloads/Complete' # Location of completed downloads
+downincomplete='/Media/Downloads/Incomplete' # Location of incomplete downloads
+tv='/Media/TV Shows' # Location of TV shows
+films='/Media/Films' # Location of films
 
 # Create download directories
 mkdir -p "$downcomplete"; chmod -R 0777 "$downcomplete"
@@ -90,9 +84,11 @@ yum install transmission-daemon -y
 mkdir -p /var/lib/transmission/.config/transmission-daemon/
 cat ./Configs/settings.json >/var/lib/transmission/.config/transmission-daemon/settings.json
 sed -i -e "\
-  s|\$downcompletesed|""$downcomplete""|g; \
-  s|\$downincompletesed|""$downincomplete""|g; \
-  s|\$transmissionpass|""$transmissionpass""|g" \
+  s|transmissionpasssed|""$transmissionpass""|g; \
+  s|emailsed|""$email""|g; \
+  s|fromsed|""$from""|g; \
+  s|fromnamesed|""$fromname""|g; \
+  s|relaydomainsed|""$relaydomain""|g" \
 /var/lib/transmission/.config/transmission-daemon/settings.json
 chown -R transmission:transmission /var/lib/transmission/
 cat ./Configs/download-unrar.sh >/usr/local/bin/download-unrar.sh
@@ -150,8 +146,11 @@ chown -R jackett:jackett /opt/jackett /var/lib/jackett
 # Jackett updater
 cat ./Configs/jackett-update.sh >/usr/local/bin/jackett-update.sh
 sed -i -e "\
-  s|\$emailsed|""$email""|g; \
-  s|\$fromsed|""$from""|g" \
+  s|transmissionpasssed|""$transmissionpass""|g; \
+  s|emailsed|""$email""|g; \
+  s|fromsed|""$from""|g; \
+  s|fromnamesed|""$fromname""|g; \
+  s|relaydomainsed|""$relaydomain""|g" \
 /usr/local/bin/jackett-update.sh
 echo "@weekly root /usr/local/bin/jackett-update.sh >/dev/null 2>&1" >/etc/cron.d/jackett-update
 
