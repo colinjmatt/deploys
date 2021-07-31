@@ -1,11 +1,13 @@
 #!/bin/bash
 # These 2 variables must be single-quoted
 transmissionuser='transmission-daemon'
-transmissionpass='$transmissionpasssed'
+transmissionpass='transmissionpasssed'
 
-# Destination email and FROM address for emailing any errors
-email="$emailsed" # Email address of the recipient
-from="$fromsed" # Email address of the sender
+# Destination email and FROM address details for emailing any errors
+email="emailsed" # Email address of the recipient
+from="fromsed" # Email address of the sender
+fromname="fromnamesed" # Friendly name of the sender
+relaydomain="relaydomainsed" # Relay to send to
 
 # Time in days to seed for
 time=$((86400*21))
@@ -45,10 +47,12 @@ case $downloadstodelete in *[![:space:]]*)
     (cd /Media/Downloads/Complete || exit
     echo "$downloadstodelete" | xargs rm -rf)
   else
-    echo "There are no active downloads matched to total downloads. Something is wrong." | \
-    mail -s "The Plex download deletion script has failed" \
-         -r "$from" \
-         "$email"
+    sendemail \
+      -f "$fromname <$from>" \
+      -t "$email" \
+      -u "The Plex download deletion script has failed" \
+      -m "There are no active downloads matched to total downloads. Something is wrong." \
+      -s "$relaydomain":25
     exit 1
   fi
 esac
