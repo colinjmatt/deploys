@@ -1,4 +1,4 @@
-[Definition]
+[DEFAULT]
 loglevel     = INFO
 logtarget    = /var/log/fail2ban.log
 syslogsocket = auto
@@ -6,3 +6,9 @@ socket       = /var/run/fail2ban/fail2ban.sock
 pidfile      = /var/run/fail2ban/fail2ban.pid
 dbfile       = /var/lib/fail2ban/fail2ban.sqlite3
 dbpurgeage   = 2628000
+dbmaxmatches = 10
+
+[Definition]
+
+
+[Thread]
