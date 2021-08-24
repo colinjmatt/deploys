@@ -22,26 +22,26 @@ header_checks          = regexp:/etc/postfix/header_checks
 mime_header_checks     = regexp:/etc/postfix/header_checks
 smtpd_banner           = $myhostname ESMTP $mail_name
 
-sendmail_path          = /usr/sbin/sendmail.postfix
-newaliases_path        = /usr/bin/newaliases.postfix
-mailq_path             = /usr/bin/mailq.postfix
+sendmail_path          = /usr/sbin/sendmail
+newaliases_path        = /usr/bin/newaliases
+mailq_path             = /usr/bin/mailq
 
 manpage_directory      = /usr/share/man
-sample_directory       = /usr/share/doc/postfix-2.10.1/samples
-readme_directory       = /usr/share/doc/postfix-2.10.1/README_FILES
+sample_directory       = /etc/postfix
+readme_directory       = /usr/share/doc/postfix
 queue_directory        = /var/spool/postfix
 command_directory      = /usr/sbin
-daemon_directory       = /usr/libexec/postfix
+daemon_directory       = /usr/lib/postfix/sbin
 data_directory         = /var/lib/postfix
 mail_owner             = postfix
 setgid_group           = postdrop
 default_privs          = nobody
-html_directory         = no
-biff                   = no
+html_directory         = /usr/share/doc/postfix/html
+biff                   = yes
 
-smtpd_tls_cert_file    = /etc/letsencrypt/live/$domain/cert.pem
-smtpd_tls_key_file     = /etc/letsencrypt/live/$domain/privkey.pem
-smtpd_tls_CAfile       = /etc/letsencrypt/live/$domain/chain.pem
+smtpd_tls_cert_file    = /etc/letsencrypt/live/$subdomain.$domain/cert.pem
+smtpd_tls_key_file     = /etc/letsencrypt/live/$subdomain.$domain/privkey.pem
+smtpd_tls_CAfile       = /etc/letsencrypt/live/$subdomain.$domain/chain.pem
 
 smtpd_use_tls          = yes
 smtpd_tls_protocols    = !SSLv2, !SSLv3
@@ -58,8 +58,8 @@ smtpd_tls_dh1024_param_file         = /etc/ssl/dhparams.pem
 policy-spf_time_limit  = 3600s
 milter_default_action  = accept
 milter_protocol        = 6
-smtpd_milters          = unix:opendkim/opendkim unix:opendmarc/opendmarc unix:clamav-milter/clamav-milter
-non_smtpd_milters      = unix:opendkim/opendkim unix:opendmarc/opendmarc unix:clamav-milter/clamav-milter
+smtpd_milters          = inet:127.0.0.1:3308 inet:127.0.0.1:3309 inet:127.0.0.1:3310
+non_smtpd_milters      = inet:127.0.0.1:3308 inet:127.0.0.1:3309 inet:127.0.0.1:3310
 
 smtpd_client_restrictions =
     permit_mynetworks,
@@ -89,6 +89,6 @@ smtpd_recipient_restrictions =
     reject_rhsbl_reverse_client dbl.spamhaus.org,
     reject_rhsbl_helo dbl.spamhaus.org,
     reject_rhsbl_sender dbl.spamhaus.org,
-    check_policy_service unix:postgrey/postgrey,
+    check_policy_service inet:127.0.0.1:10023,
     check_policy_service unix:private/policy-spf,
     permit
