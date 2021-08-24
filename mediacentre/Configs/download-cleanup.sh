@@ -16,10 +16,12 @@ time=$((86400*21))
 torrentlist=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | sed -e '1d' -e '$d' | awk '{print $1}' | sed -e 's/[^0-9]*//g')
 for id in $torrentlist
 do
-    seedtime=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -t "$id" -i | grep "Seeding Time" | sed 's/.*(\(.*\) seconds)/\1/')
-          if [ "$seedtime" -gt "$time" ]; then
-            transmission-remote -n "$transmissionuser":"$transmissionpass" -t "$id" --remove-and-delete
-          fi
+  seedtime=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -t "$id" -i | grep "Seeding Time" | sed 's/.*(\(.*\) seconds)/\1/')
+    if [ -n "$seedtime" ]; then
+      if [ "$seedtime" -gt "$time" ]; then
+        transmission-remote -n "$transmissionuser":"$transmissionpass" -t "$id" --remove-and-delete
+      fi
+    fi
 done
 
 IFS='/'
@@ -35,25 +37,16 @@ do
   fi
 done
 
-# Acive downloads counted
-downloadsactive=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | awk -F 'Idle         ' ' {print $2}' | tail -n +2 | head -n -1 | sed "s/^/'/;s/$/'/")
+# Active downloads counted
+downloadsactive=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | grep 'Idle\|Seeding\|Verifying\|Stopped' | awk '{print $NF}' | sed "s/^/'/;s/$/'/")
 
 # Any counted downloads that aren't active and can therefore be deleted
 downloadstodelete=$(echo "$downloadstotal" | grep -Fxv "$downloadsactive" | tr '\n' ' ')
 
 # Check there are downloads to delete and if so, that the active downloads returned are present in the total downloads counted otherwise there's something wrong with the data
-case $downloadstodelete in *[![:space:]]*)
-  if [ -z "$(echo "$downloadsactive" | grep "$downloadstotal")" ]; then
-    (cd /Media/Downloads/Complete || exit
-    echo "$downloadstodelete" | xargs rm -rf)
-  else
-    sendemail \
-      -f "$fromname <$from>" \
-      -t "$email" \
-      -u "The Plex download deletion script has failed" \
-      -m "There are no active downloads matched to total downloads. Something is wrong." \
-      -s "$relaydomain":25
-    exit 1
-  fi
-esac
+if [ -n "$downloadstodelete" ]; then
+  (cd /Media/Downloads/Complete || exit
+  echo "$downloadstodelete" | xargs rm -rf)
+fi
+
 unset IFS
