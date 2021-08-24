@@ -1,9 +1,11 @@
-$domain         REJECT    UNAUTHORISED USE OF DOMAIN NAME
-.$domain       REJECT    UNAUTHORISED USE OF DOMAIN NAME
-foxmail.com     REJECT    NO THANK YOU
-.foxmail.com    REJECT    NO THANK YOU
-smtpbg.qq.com   REJECT    NO THANK YOU
-qq.com          REJECT    NO THANK YOU
-.qq.com         REJECT    NO THANK YOU
-gereechina.com  REJECT    NO THANK YOU
-.gereechina.com REJECT    NO THANK YOU
+$domain          REJECT  UNAUTHORISED USE OF DOMAIN NAME
+.$domain         REJECT  UNAUTHORISED USE OF DOMAIN NAME
+foxmail.com      REJECT  NO THANK YOU
+.foxmail.com     REJECT  NO THANK YOU
+smtpbg.qq.com    REJECT  NO THANK YOU
+qq.com           REJECT  NO THANK YOU
+.qq.com          REJECT  NO THANK YOU
+gereechina.com   REJECT  NO THANK YOU
+.gereechina.com  REJECT  NO THANK YOU
+.163.com         REJECT  NO THANK YOU
+163.com          REJECT  NO THANK YOU
