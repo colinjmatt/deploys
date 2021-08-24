@@ -67,7 +67,7 @@ echo "@daily root /usr/local/bin/certbot-auto >/dev/null 2>&1" >/etc/cron.d/cert
 openssl dhparam -out /etc/ssl/dhparams.pem 4096
 
 # Install & configure transmission-daemon
-apt-get -y install transmission-daemon
+apt-get -y install transmission-daemon rar unrar
 mkdir -p /var/lib/transmission/.config/transmission-daemon/
 cat ./Configs/settings.json >/var/lib/transmission/.config/transmission-daemon/settings.json
 sed -i -e "\
