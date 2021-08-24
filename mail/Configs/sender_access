@@ -1,2 +1,9 @@
-foxmail.com     REJECT    NO THANK YOU
-china           REJECT    NO THANK YOU
+foxmail.com      REJECT    NO THANK YOU
+china            REJECT    NO THANK YOU
+.cn              REJECT    NO THANK YOU
+163.com          REJECT    NO THANK YOU
+mokofs-world.com REJECT    NO THANK YOU
+fuzoo-world.com  REJECT    NO THANK YOU
+
+experian.co.uk   REJECT    YOUR SERVICE EMAILS ARE SPAM!
+nectar.com       REJECT    YOUR SERVICE EMAILS ARE SPAM!
