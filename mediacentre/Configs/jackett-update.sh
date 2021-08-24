@@ -15,8 +15,8 @@ mv /opt/jackett /opt/jackettold
 while [[ ! -d /opt/Jackett && $x -lt 5 ]]; do
   ( cd /tmp || exit 1
   curl -s https://api.github.com/repos/Jackett/Jackett/releases | \
-  grep "browser_download_url.*Jackett.Binaries.LinuxAMDx64.tar.gz" | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i- )
-  tar -zxf Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt/
+  grep "browser_download_url.*Jackett.Binaries.LinuxAMDx64.tar.gz" | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
+  tar -zxf Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt/)
   x=$(( x + 1 ))
 done
 
