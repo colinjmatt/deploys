@@ -13,10 +13,6 @@ for port in $ports; do
 done
 firewall-cmd --reload
 
-# Remove apache if it's installed
-apt-get remove -y apache
-apt-get autoremove -y
-
 # Install packages
 apt-get install -y \
   certbot clamav clamav-daemon clamav-milter \
@@ -25,14 +21,14 @@ apt-get install -y \
   mysql-server \
   nginx \
   opendkim opendkim-tools opendmarc \
-  php php-curl php-fpm php-json php-mysql php-pdo php-xml postfix postgrey postfix-policyd-spf-python \
+  php-common php-curl php-fpm php-json php-mysql php-pdo php-xml postfix postgrey postfix-policyd-spf-python \
   spamassassin \
   whois \
   zip unzip
 
-# Set aliases
-cat ./Configs/aliases >/etc/aliases
-newaliases
+# Remove apache if it's installed
+apt-get remove -y apache2
+apt-get autoremove -y
 
 # Generate Diffie Hellman
 openssl dhparam -out /etc/ssl/dhparams.pem 4096
@@ -54,6 +50,7 @@ echo "nameserver 127.0.0.1" >/etc/resolv.conf
 for ip in $dns; do
   echo "server=$ip" >>/etc/dnsmasq.conf
 done
+systemctl start dnsmasq
 
 # Configure clamav
 sed -i -e "\
@@ -73,11 +70,7 @@ mkfifo /var/spool/postfix/public/pickup
 postconf compatibility_level=2
 
 # Configure spamassassin
-cat ./Configs/local.cf >/etc/mail/spamassassin/local.cf
-groupadd -r spamd
-useradd -r -g spamd -s /sbin/nologin -d /var/lib/spamassassin spamd
-mkdir -p /var/lib/spamassassin/.spamassassin
-chown -R spamd:spamd /var/lib/spamassassin/
+cat ./Configs/local.cf >/etc/spamassassin/local.cf
 sed -i -e "s/CRON=.*/CRON=1/g" /etc/default/spamassassin
 
 # Configure dovecot
@@ -93,7 +86,7 @@ cat ./Configs/90-sieve.conf >/etc/dovecot/conf.d/90-sieve.conf
 
 # Configure postgrey
 echo "POSTGREY_OPTS=\"--inet=127.0.0.1:10023 --delay=60\"" >/etc/default/postgrey
-cat ./Configs/postgrey_whitelist_clients.local /etc/postgrey/postgrey_whitelist_clients.local
+cat ./Configs/postgrey_whitelist_clients.local >/etc/postgrey/postgrey_whitelist_clients.local
 
 # Configure opendkim & opendmarc
 cat ./Configs/opendkim.conf >/etc/opendkim.conf
@@ -105,8 +98,7 @@ echo "*@$domain mail._domainkey.$subdomain.$domain" >/etc/opendkim/SigningTable
 mkdir -p /etc/opendkim/keys/"$subdomain"."$domain"
 opendkim-genkey -D /etc/opendkim/keys/"$subdomain"."$domain"/ -s mail -d "$subdomain"."$domain" # mail.txt will need to be entered into your domain configuration
 chown -R opendkim:opendkim /etc/opendkim
-chmod 0750 /etc/opendkim/keys
-chmod 0750 /etc/opendkim/keys/"$subdomain"."$domain"
+chmod 0750 /etc/opendkim/ /etc/opendkim/keys /etc/opendkim/keys/"$subdomain"."$domain"
 chmod 0600 /etc/opendkim/keys/"$subdomain"."$domain"/mail.private
 chmod 0640 /etc/opendkim /etc/opendkim/TrustedHosts
 usermod -a -G opendkim opendmarc
@@ -162,6 +154,10 @@ sed -i -e "s/\$subdomain/""$subdomain""/g" \
 postmap hash:/etc/postfix/sender_access
 postmap hash:/etc/postfix/helo_access
 postmap hash:/etc/postfix/header_checks
+
+# Set aliases
+cat ./Configs/aliases >/etc/aliases
+newaliases
 
 # Rainloop webmail server configuration
 curl https://www.rainloop.net/repository/webmail/rainloop-latest.zip -o /tmp/rainloop-latest.zip
