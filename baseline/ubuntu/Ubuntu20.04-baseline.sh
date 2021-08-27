@@ -16,6 +16,7 @@ sudoers="user1 user4"
 timezone="Europe/London"
 
 # Packages needed
+apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade 
 apt-get -y install firewalld curl
 
 # Create 4GB swapfile
