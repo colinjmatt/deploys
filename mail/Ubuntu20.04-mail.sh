@@ -26,10 +26,6 @@ apt-get install -y \
   whois \
   zip unzip
 
-# Remove apache if it's installed
-apt-get remove -y apache2
-apt-get autoremove -y
-
 # Generate Diffie Hellman
 openssl dhparam -out /etc/ssl/dhparams.pem 4096
 
@@ -100,7 +96,7 @@ opendkim-genkey -D /etc/opendkim/keys/"$subdomain"."$domain"/ -s mail -d "$subdo
 chown -R opendkim:opendkim /etc/opendkim
 chmod 0750 /etc/opendkim/ /etc/opendkim/keys /etc/opendkim/keys/"$subdomain"."$domain"
 chmod 0600 /etc/opendkim/keys/"$subdomain"."$domain"/mail.private
-chmod 0640 /etc/opendkim /etc/opendkim/TrustedHosts
+chmod 0640 /etc/opendkim/TrustedHosts
 usermod -a -G opendkim opendmarc
 
 # Configure fail2ban
@@ -121,7 +117,7 @@ mkdir -p /var/www/"$subdomain"/.well-known
 cat ./Configs/index.html >/var/www/"$subdomain"/index.html
 chmod -R 0755 /var/www/"$subdomain"
 chown -R www-data:www-data /var/www/"$subdomain"
-systemctl start nginx
+systemctl reload nginx
 certbot certonly --register-unsafely-without-email --agree-tos --webroot -w /var/www/"$subdomain"/ -d "$subdomain"."$domain"
 cat ./Configs/certrenew.sh >/etc/cron.daily/certrenew.sh
 chmod +x /etc/cron.daily/certrenew.sh
@@ -168,7 +164,6 @@ chown -R www-data:www-data /var/www/$subdomain
 sed -i -e "s/index.html/index.php/g" /etc/nginx/sites/"$subdomain"."$domain".conf
 
 # MySQL configuration
-systemctl start mysql
 mysql_secure_installation
 sed -i -e "s/\$rainlooppassword/""$rainlooppassword""/g" ./Configs/rainloop.sql
 mysql -u root < ./Configs/rainloop.sql -p;
