@@ -1,10 +1,10 @@
-create database rainloopdb;
+create database rainloop;
 
-create user 'rainloopuser'
+create user 'rainloopuser'@'localhost'
   identified by '$rainlooppassword';
 
 grant all privileges
   on rainloopdb.*
-  to rainloopuser;
+  to 'rainloopuser'@'localhost';
 
 flush privileges;
