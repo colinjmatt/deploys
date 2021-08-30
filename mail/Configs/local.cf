@@ -1,6 +1,6 @@
 rewrite_header Subject *****SPAM*****
 report_safe 0
-trusted_networks 127.0.0.1
+#trusted_networks
 lock_method flock
 required_score 5.0
 use_bayes 1
