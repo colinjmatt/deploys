@@ -171,7 +171,7 @@ mysql -u root < ./Configs/rainloop.sql -p;
 # PHP max file upload size 1GB
 sed -i -e "s/upload_max_filesize\ =.*/upload_max_filesize\ =\ 1024M/g" 	/etc/php/7.4/fpm/php.ini
 
-# Enable EVERYTHING
+# Enable EVERYTHING, although most/all should already be enabled. Doesn't hurt to check.
 systemctl enable    clamav-milter \
                     dovecot \
                     fail2ban \
@@ -179,9 +179,9 @@ systemctl enable    clamav-milter \
                     nginx \
                     opendmarc \
                     opendkim \
+                    php7.4-fpm \
                     postfix \
                     postgrey \
-                    php7.4-fpm \
                     spamassassin
 
 rm -rf /tmp/*
