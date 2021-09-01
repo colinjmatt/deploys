@@ -86,6 +86,7 @@ cat ./Configs/postgrey_whitelist_clients.local >/etc/postgrey/postgrey_whitelist
 
 # Configure opendkim & opendmarc
 cat ./Configs/opendkim.conf >/etc/opendkim.conf
+echo "Nameservers $(echo "$dns" | sed -e 's/ /,/g')" >> /etc/opendkim.conf
 cat ./Configs/opendmarc.conf >/etc/opendmarc.conf
 mkdir -p /etc/opendkim/
 cat ./Configs/TrustedHosts >/etc/opendkim/TrustedHosts
