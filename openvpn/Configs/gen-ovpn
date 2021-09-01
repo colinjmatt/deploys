@@ -104,7 +104,7 @@ if [[ -n "$authuser" && -n "$authpassword" ]]; then
     -s "$relaydomain":587 \
     -o tls=auto \
     -xu "$authuser" \
-    -xp "$authpassword" \
+    -xp "$authpassword"
 else
   sendemail \
     -f "$vpnname <no-reply@$relaydomain>" \
