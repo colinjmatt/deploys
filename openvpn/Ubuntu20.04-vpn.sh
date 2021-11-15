@@ -4,7 +4,7 @@
 hostname="$(cat /etc/hostname)"
 domain="example.com" # FQDN of the server
 dns="1.1.1.1 8.8.8.8 1.0.0.1 8.8.4.4" # List of nameservers to be used
-smtpaddress"smtp.publicmailserver.com" # The mail server used to send client profile emails
+smtpaddress="smtp.publicmailserver.com" # The mail server used to send client profile emails
 smtpport="587" # Port used to connect to the SMTP server
 smtpuser="user@publicmailserver.com" # User name to authenticate with (usually the email address)
 smtppassword="password" # Password used to authenticate with
@@ -84,9 +84,9 @@ firewall-cmd --reload
 cat ./Configs/server.conf >/etc/openvpn/server/tcpserver.conf
 cat ./Configs/server.conf >/etc/openvpn/server/udpserver.conf
 sed -i -e " \
-  s/port\ .*/port\ 1194/g;
-  s/proto\ .*/proto\ udp4/g;
-  s/dev\ .*/dev\ tun1/g;
+  s/port\ .*/port\ 1194/g; \
+  s/proto\ .*/proto\ udp4/g; \
+  s/dev\ .*/dev\ tun1/g; \
   s/10.8.0/10.8.1/g; \
   s/explicit-exit-notify .*/explicit-exit-notify\ 1/g " \
 /etc/openvpn/server/udpserver.conf
@@ -103,12 +103,12 @@ systemctl start openvpn-server@tcpserver \
 # Conifgure postfix as a local relay
 cat ./Configs/main.cf >/etc/postfix/main.cf
 sed -i -e " \
-  s/\$hostname/""$hostname""/g;
-  s/\$domain/""$domain""/g;
-  s/\$smtpaddress/""$smtpaddress""/g;
-  s/\$smtpport/""$smtpport""/g;
-  s/\$smtpuser/""$smtpuser""/g;
-  s/\$smtppassword/""$smtppassword""/g "
+  s/\$hostname/""$hostname""/g; \
+  s/\$domain/""$domain""/g; \
+  s/\$smtpaddress/""$smtpaddress""/g; \
+  s/\$smtpport/""$smtpport""/g; \
+  s/\$smtpuser/""$smtpuser""/g; \
+  s/\$smtppassword/""$smtppassword""/g " \
 /etc/postfix/main.cf
 systemctl reload postfix
 
