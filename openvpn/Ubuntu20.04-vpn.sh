@@ -1,8 +1,13 @@
 #!/bin/bash
 # OpenVPN server deployment with optional ad blocking functionality using Ubuntu 20.04
 
+hostname="$(cat /etc/hostname)"
 domain="example.com" # FQDN of the server
 dns="1.1.1.1 8.8.8.8 1.0.0.1 8.8.4.4" # List of nameservers to be used
+smtpaddress"smtp.publicmailserver.com" # The mail server used to send client profile emails
+smtpport="587" # Port used to connect to the SMTP server
+smtpuser="user@publicmailserver.com" # User name to authenticate with (usually the email address)
+smtppassword="password" # Password used to authenticate with
 adblock="yes" # Change to anything but "yes" if ad blocking is not preferred
 
 # Disable as much logging as possible
@@ -21,7 +26,7 @@ done< <(find /var/log/ -type f -name "*" -print0)
 cat ./Configs/dev-null.service >/etc/systemd/system/dev-null.service
 
 # Install packages
-apt-get -y install openvpn easy-rsa sendemail dnsmasq
+apt-get -y install openvpn easy-rsa mailutils postfix dnsmasq
 
 # Configure dnsmasq
 cat ./Configs/dnsmasq.conf >/etc/dnsmasq.conf
@@ -94,6 +99,18 @@ sed -i -e "s/\$domain/""$domain""/g" /etc/openvpn/template-profiles/profile.ovpn
 systemctl start openvpn-server@tcpserver \
                 openvpn-server@udpserver \
                 dnsmasq
+
+# Conifgure postfix as a local relay
+cat ./Configs/main.cf >/etc/postfix/main.cf
+sed -i -e " \
+  s/\$hostname/""$hostname""/g;
+  s/\$domain/""$domain""/g;
+  s/\$smtpaddress/""$smtpaddress""/g;
+  s/\$smtpport/""$smtpport""/g;
+  s/\$smtpuser/""$smtpuser""/g;
+  s/\$smtppassword/""$smtppassword""/g "
+/etc/postfix/main.cf
+systemctl reload postfix
 
 # Copy cert & ovpn profile generator script
 cat ./Configs/gen-ovpn >/usr/local/bin/gen-ovpn
