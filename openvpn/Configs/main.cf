@@ -1,4 +1,4 @@
-alias_maps = hash:/etc/aliases
+alias_maps = hash:/etc/postfix/aliases
 alias_database = $alias_maps
 header_size_limit = 4096000
 inet_interfaces = 127.0.0.1
@@ -16,3 +16,4 @@ smtp_sasl_auth_enable = yes
 smtp_sasl_password_maps = static:$smtpuser:$smtppassword
 smtp_sasl_security_options = noanonymous
 smtp_tls_security_level = encrypt
+smtpd_relay_restrictions = permit_mynetworks, reject
