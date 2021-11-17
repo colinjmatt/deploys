@@ -110,6 +110,7 @@ sed -i -e " \
   s/\$smtpuser/""$smtpuser""/g; \
   s/\$smtppassword/""$smtppassword""/g " \
 /etc/postfix/main.cf
+touch /etc/postfix/aliases
 systemctl reload postfix
 
 # Copy cert & ovpn profile generator script
