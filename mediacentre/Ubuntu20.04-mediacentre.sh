@@ -99,14 +99,10 @@ apt-get -y install mono-devel mediainfo sqlite3
 su $user -P -c 'bash -c "$(wget -qO - https://raw.githubusercontent.com/mrworf/plexupdate/master/extras/installer.sh)"'
 
 # Install & configure sonarr
-( cd /tmp || return
-wget http://download.sonarr.tv/v2/master/mono/NzbDrone.master.tar.gz
-tar -zxf /tmp/NzbDrone.master.tar.gz -C /opt/ )
-mv /opt/NzbDrone /opt/nzbdrone
-cat ./Configs/sonarr.service >/etc/systemd/system/sonarr.service
-mkdir -p /var/lib/sonarr/.config/NzbDrone/
-echo -e "<Config>\n  <UrlBase>/sonarr</UrlBase>\n</Config>" >/var/lib/sonarr/.config/NzbDrone/config.xml
-chown -R sonarr:sonarr /opt/nzbdrone /var/lib/sonarr
+apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 2009837CBFFD68F45BC180471F4F90DE2A9B4BF8
+echo "deb https://apt.sonarr.tv/ubuntu focal main" | sudo tee /etc/apt/sources.list.d/sonarr.list
+apt-get update && apt-get install sonarr
+sed -i -e "s/<UrlBase>.*/<UrlBase>\/sonarr<\/UrlBase>/g" /var/lib/sonarr/config.xml
 
 # Install and configure radarr
 ( cd /tmp || return
