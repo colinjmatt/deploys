@@ -29,7 +29,7 @@ sed -i -e "\
 /usr/local/bin/permissions.sh
 
 # Create service users
-users="sonarr radarr jackett transmission"
+users="sonarr radarr jackett flaresolverr transmission"
 for name in $users ; do
     groupadd -r "$name"
     useradd -m -r -g "$name" -d /var/lib/"$name" "$name"
@@ -135,6 +135,14 @@ sed -i -e "\
 /usr/local/bin/jackett-update.sh
 echo "@weekly root /usr/local/bin/jackett-update.sh >/dev/null 2>&1" >/etc/cron.d/jackett-update
 
+# Install flaresolverr
+apt-get -y install firefox
+( cd /tmp || return
+curl -s https://api.github.com/repos/FlareSolverr/FlareSolverr/releases | grep "browser_download_url".*flaresolverr-.*-linux-x64.zip | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
+unzip flaresolverr-*-linux-x64.zip -d /opt/ )
+cp /opt/flaresolverr/flaresolverr.service /etc/systemd/system/
+chown -R flaresolverr:flaresolverr /opt/flaresolverr /var/lib/flaresolverr
+
 # Everything in /usr/local/bin made to be executable
 chmod +x /usr/local/bin/*
 
@@ -144,6 +152,7 @@ systemctl restart systemd-resolved \
 systemctl enable  transmission-daemon \
                   sonarr \
                   radarr \
-                  jackett --now
+                  jackett \
+                  flaresolverr --now
 
 printf "Setup complete.\n"
