@@ -29,11 +29,12 @@ sed -i -e "\
 /usr/local/bin/permissions.sh
 
 # Create service users
-users="sonarr radarr jackett flaresolverr transmission"
+users="transmission sonarr radarr jackett flaresolverr"
 for name in $users ; do
     groupadd -r "$name"
     useradd -m -r -g "$name" -d /var/lib/"$name" "$name"
     chown -R "$name":"$name" /var/lib/"$name"
+    usermod -a -G transmission "$name"
 done
 
 # Use Cloudflare DNS
