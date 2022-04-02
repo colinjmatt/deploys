@@ -2,17 +2,11 @@
 # These 2 variables must be single-quoted
 transmissionuser='transmission-daemon'
 transmissionpass='transmissionpasssed'
-
-# Destination email and FROM address details for emailing any errors
-email="emailsed" # Email address of the recipient
-from="fromsed" # Email address of the sender
-fromname="fromnamesed" # Friendly name of the sender
-relaydomain="relaydomainsed" # Relay to send to
+downloads='downloadssed'
 
 # Time in days to seed for
 time=$((86400*21))
 
-# Get list of torrent IDs, then remove and delete if seed time is greater than what $time is set to
 torrentlist=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | sed -e '1d' -e '$d' | awk '{print $1}' | sed -e 's/[^0-9]*//g')
 for id in $torrentlist
 do
@@ -26,11 +20,12 @@ done
 
 IFS='/'
 # Total counted downloads
-for download in /Media/Downloads/Complete/*
+for download in "$downloads"/TV-Shows/* "$downloads"/Films/* "$downloads"/*
 do
-  if [ -e "$download" ]
-  then
-    downloadstotal=$(cd /Media/Downloads/Complete || exit; find -- * -maxdepth 0 | sed "s/^/'/;s/$/'/")
+  if [ -e "$download" ]; then
+    downloadstotal="$(cd "$downloads" || exit; find -- * -maxdepth 0 | sed "s/^/'/;s/$/'/" | sed "s/'Films'//g; s/'TV-Shows'//g" | sed '/^$/d')
+$(cd "$downloads"/Films || exit; find -- * -maxdepth 0 | sed "s/^/'/;s/$/'/")
+$(cd "$downloads"/TV-Shows || exit; find -- * -maxdepth 0 | sed "s/^/'/;s/$/'/")"
     break
   else
     downloadstotal=""
@@ -38,15 +33,18 @@ do
 done
 
 # Active downloads counted
-downloadsactive=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | grep 'Idle\|Seeding\|Verifying\|Stopped' | awk '{print $NF}' | sed "s/^/'/;s/$/'/")
+downloadsactive=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | grep 'Idle\|Seeding\|Verifying\|Stopped' | sed -re 's,\s+, ,g' | cut -d ' ' -f 11- | sed "s/^/'/;s/$/'/")
 
 # Any counted downloads that aren't active and can therefore be deleted
 downloadstodelete=$(echo "$downloadstotal" | grep -Fxv "$downloadsactive" | tr '\n' ' ')
 
-# Check there are downloads to delete and if so, that the active downloads returned are present in the total downloads counted otherwise there's something wrong with the data
 if [ -n "$downloadstodelete" ]; then
-  (cd /Media/Downloads/Complete || exit
-  echo "$downloadstodelete" | xargs rm -rf)
+  (cd "$downloads" || exit
+  echo "$downloadstodelete" | xargs rm -rf >/dev/null)
+  (cd "$downloads"/Films || exit
+  echo "$downloadstodelete" | xargs rm -rf >/dev/null)
+  (cd "$downloads"/TV-Shows || exit
+  echo "$downloadstodelete" | xargs rm -rf >/dev/null)
 fi
 
 unset IFS
