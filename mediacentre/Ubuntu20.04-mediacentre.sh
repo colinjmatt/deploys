@@ -4,17 +4,13 @@
 domain="example.com" # FQDN of the server
 user="user1" # Name of non-root user to install Plex as (usually the user you will ssh with)
 transmissionpass='password' # Password for transmission rpc (needs to be single-quoted)
-email="user@example.com" # Address to send errors to
-from="root@example.com" # email address of sender
-fromname="Plex Server" # Friendly name for sender
-relaydomain="example.com" # FQDN of email relay
 downcomplete='/Media/Downloads/Complete' # Location of completed downloads
 downincomplete='/Media/Downloads/Incomplete' # Location of incomplete downloads
-tv='/Media/TV Shows' # Location of TV shows
+tv='/Media/TV-Shows' # Location of TV shows
 films='/Media/Films' # Location of films
 
 # Create download directories
-mkdir -p "$downcomplete"; chmod -R 0777 "$downcomplete"
+mkdir -p "$downcomplete"/Films; mkdir -p "$downcomplete"/TV-Shows; chmod -R 0777 "$downcomplete"
 mkdir -p "$downincomplete"; chmod -R 0777 "$downincomplete"
 mkdir -p "$tv"; chmod -R 0777 "$tv"
 mkdir -p "$films"; chmod -R 0777 "$films"
@@ -86,10 +82,7 @@ apt-get -y install sendmail
 cat ./Configs/download-cleanup.sh >/usr/local/bin/download-cleanup.sh
 sed -i -e "\
   s|transmissionpasssed|""$transmissionpass""|g; \
-  s|emailsed|""$email""|g; \
-  s|fromsed|""$from""|g; \
-  s|fromnamesed|""$fromname""|g; \
-  s|relaydomainsed|""$relaydomain""|g" \
+  s|downloadssed|""$downcomplete""|g" \
 /usr/local/bin/download-cleanup.sh
 echo "@daily root /usr/local/bin/download-cleanup.sh >/dev/null 2>&1" >/etc/cron.d/download-cleanup
 
@@ -117,7 +110,7 @@ chown -R radarr:radarr /opt/radarr /var/lib/radarr
 
 # Install & configure jackett
 ( cd /tmp || return
-curl -s https://api.github.com/repos/Jackett/Jackett/releases | grep "browser_download_url".*Jackett.Binaries.LinuxAMDx64.tar.gz | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
+curl -s https://api.github.com/repos/Jackett/Jackett/releases | grep "browser_download_url.*Jackett.Binaries.LinuxAMDx64.tar.gz" | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
 tar -zxf Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt/ )
 mv /opt/Jackett /opt/jackett
 cat ./Configs/jackett.service >/etc/systemd/system/jackett.service
@@ -127,19 +120,12 @@ chown -R jackett:jackett /opt/jackett /var/lib/jackett
 
 # Jackett updater
 cat ./Configs/jackett-update.sh >/usr/local/bin/jackett-update.sh
-sed -i -e "\
-  s|transmissionpasssed|""$transmissionpass""|g; \
-  s|emailsed|""$email""|g; \
-  s|fromsed|""$from""|g; \
-  s|fromnamesed|""$fromname""|g; \
-  s|relaydomainsed|""$relaydomain""|g" \
-/usr/local/bin/jackett-update.sh
 echo "@weekly root /usr/local/bin/jackett-update.sh >/dev/null 2>&1" >/etc/cron.d/jackett-update
 
 # Install flaresolverr
 apt-get -y install firefox
 ( cd /tmp || return
-curl -s https://api.github.com/repos/FlareSolverr/FlareSolverr/releases | grep "browser_download_url".*flaresolverr-.*-linux-x64.zip | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
+curl -s https://api.github.com/repos/FlareSolverr/FlareSolverr/releases | grep "browser_download_url.*flaresolverr-.*-linux-x64.zip" | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
 unzip flaresolverr-*-linux-x64.zip -d /opt/ )
 cp /opt/flaresolverr/flaresolverr.service /etc/systemd/system/
 chown -R flaresolverr:flaresolverr /opt/flaresolverr /var/lib/flaresolverr
