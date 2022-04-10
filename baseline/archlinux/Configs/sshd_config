@@ -2,6 +2,7 @@ AllowUsers $sshusers
 AuthenticationMethods publickey
 AuthorizedKeysFile .ssh/id_rsa.pub
 ChallengeResponseAuthentication no
+HostKey /etc/ssh/ssh_host_ed25519_key
 IgnoreRhosts yes
 PasswordAuthentication no
 PermitEmptyPasswords no
