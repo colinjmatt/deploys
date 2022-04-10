@@ -7,15 +7,35 @@ downloads='downloadssed'
 # Time in days to seed for
 time=$((86400*21))
 
-torrentlist=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | sed -e '1d' -e '$d' | awk '{print $1}' | sed -e 's/[^0-9]*//g')
-for id in $torrentlist
-do
-  seedtime=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -t "$id" -i | grep "Seeding Time" | sed 's/.*(\(.*\) seconds)/\1/')
+# Remove and delete any torrents that have seeded longer than $time
+torrentlist=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l \
+  | sed -e '1d' -e '$d' \
+  | awk '{print $1}' \
+  | sed -e 's/[^0-9]*//g')
+
+for id in $torrentlist; do
+  seedtime=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -t "$id" -i \
+    | grep "Seeding Time" \
+    | sed 's/.*(\(.*\) seconds)/\1/')
+
     if [ -n "$seedtime" ]; then
       if [ "$seedtime" -gt "$time" ]; then
         transmission-remote -n "$transmissionuser":"$transmissionpass" -t "$id" --remove-and-delete
       fi
     fi
+done
+
+# Remove and delete finished torrents
+finishedtorrents=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l \
+  | sed -e '1d' -e '$d' \
+  | grep ' Finished ' \
+  | awk '{print $1}' \
+  | sed -e 's/[^0-9]*//g')
+
+for finid in $finishedtorrents; do
+  if [ -n "$finid" ]; then
+    transmission-remote -n "$transmissionuser":"$transmissionpass" -t "$finid" --remove-and-delete
+  fi
 done
 
 IFS='/'
