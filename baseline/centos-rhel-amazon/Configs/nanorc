@@ -1,5 +1,0 @@
-set historylog
-set nowrap
-set suspend
-
-include /usr/share/nano/sh.nanorc
