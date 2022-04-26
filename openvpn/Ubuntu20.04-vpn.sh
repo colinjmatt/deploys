@@ -49,7 +49,7 @@ openvpn --genkey --secret /etc/openvpn/server/ta.key
 # Initialise PKI
 cat ./Configs/vars >/etc/easy-rsa/vars
 ( cd /etc/easy-rsa || return
-source ./vars
+source ./export
 ./easyrsa init-pki
 
 # Generate ca
