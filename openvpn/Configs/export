@@ -1,0 +1,6 @@
+export KEY_COUNTRY="anon"
+export KEY_PROVINCE="anon"
+export KEY_CITY="anon"
+export KEY_ORG="anon"
+export KEY_EMAIL="anon@anon.com"
+export KEY_OU="anon"
