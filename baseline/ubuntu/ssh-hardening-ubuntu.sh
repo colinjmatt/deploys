@@ -20,8 +20,8 @@ if [[ "$iprestrict" = "yes" ]]; then
   cat ./Configs/ssh-allowed.sh >/usr/local/bin/ssh-allowed.sh
   chmod +x /usr/local/bin/ssh-allowed.sh
   sed -i -e "s/domain=.*/domain=\"""$domain""\"/g" /usr/local/bin/ssh-allowed.sh
-  echo "*/10 * * * * root PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\" /usr/local/bin/ssh-allowed.sh" >/etc/cron.d/ssh-allowed
-  echo "@reboot root PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\" /usr/local/bin/ssh-allowed.sh" >/etc/cron.d/ssh-allowed-reboot
+  echo '*/10 * * * * root PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" /usr/local/bin/ssh-allowed.sh >/dev/null 2>&1' >/etc/cron.d/ssh-allowed
+  echo '@reboot root PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\" /usr/local/bin/ssh-allowed.sh >/dev/null 2>&1' >/etc/cron.d/ssh-allowed-reboot
 fi
 
 systemctl restart sshd
