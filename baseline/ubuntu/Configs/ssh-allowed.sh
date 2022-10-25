@@ -1,19 +1,21 @@
 #!/bin/bash
-domain="example.com"
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+domain="home.matthews.uk.net"
 ip=$(dig +short "$domain")
+lastip=$(cat /tmp/ipcheck)
 
-# Check ssh-allowed exists in ipset and create if not
-if ! ipset list ssh-allowed > /dev/null 2>&1; then
-   ipset create ssh-allowed hash:ip
-fi
+echo "$ip">/tmp/ipcheck
 
-# Check shh-allowed exists in iptables and create if not
-if ! iptables -L -vn | grep "match-set ssh-allowed"  > /dev/null 2>&1; then
-   iptables -A IN_drop_allow -p tcp --dport 22 -m set --match-set ssh-allowed src -j ACCEPT
-fi
 
-# Check if IP in ssh-allowed matches the current IP of the target domain and update ssh-allowed if not
-if [[ "$(ipset list ssh-allowed | tail -n 1)" != "$ip" ]]; then
-  ipset flush ssh-allowed
-  ipset add ssh-allowed "$ip"
+if [ "$ip" != "$lastip" ];then
+  firewallrule=$(firewall-cmd --zone=drop --list-all | grep -A 1 "rich rules:" | tail -1 | awk '{$1=$1;print}')
+  firewall-cmd --zone=drop --remove-rich-rule "$firewallrule"
+
+
+ firewall-cmd --zone=drop --add-rich-rule="
+    rule family=\"ipv4\"
+    source address=\"$ip\"
+    port protocol=\"tcp\"
+    port=\"22\"
+    accept"
 fi
