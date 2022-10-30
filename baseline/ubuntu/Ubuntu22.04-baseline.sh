@@ -16,11 +16,11 @@ sudoers="user1 user4"
 timezone="Europe/London"
 
 # Packages needed
-apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade 
+apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade
 apt-get -y install firewalld curl
 
 # Create 4GB swapfile
-dd if=/dev/zero of=/mnt/swapfile bs=1M count=4096
+dd if=/dev/zero of=/mnt/swapfile bs=1M count=16384
 chown root:root /mnt/swapfile
 chmod 600 /mnt/swapfile
 mkswap /mnt/swapfile
