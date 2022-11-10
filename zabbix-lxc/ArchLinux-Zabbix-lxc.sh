@@ -38,7 +38,7 @@ sed -i -e "\
 /etc/zabbix/zabbix_agent.conf
 
 openssl req -x509 -nodes -days 36500 -newkey rsa:4096 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
-openssl dhparam -out /etc/ssl/certs/dhparams.pem 4096
+openssl dhparam -out /etc/ssl/certs/dhparam.pem 4096
 
 systemctl enable \
   nginx \
