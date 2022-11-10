@@ -1,8 +1,8 @@
 #!/bin/bash
 # These 2 variables must be single-quoted
 transmissionuser='transmission-daemon'
-transmissionpass='transmissionpasssed'
-downloads='downloadssed'
+transmissionpass='transmissionpass-sed'
+downloads='downloads-sed'
 
 # Time in days to seed for
 time=$((86400*21))
