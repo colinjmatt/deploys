@@ -1,34 +1,36 @@
 #!/bin/bash
-# Media server deployment using Ubuntu 20.04
+# Media server deployment using Ubuntu 22.04
 
 domain="example.com" # FQDN of the server
 user="user1" # Name of non-root user to install Plex as (usually the user you will ssh with)
 transmissionpass='password' # Password for transmission rpc (needs to be single-quoted)
-downcomplete='/Media/Downloads/Complete' # Location of completed downloads
-downincomplete='/Media/Downloads/Incomplete' # Location of incomplete downloads
-tv='/Media/TV-Shows' # Location of TV shows
-films='/Media/Films' # Location of films
+transmissionwhitelist='example.com' # Address to whitelist
+basemediapath='Media' # This MUST match all other locations below
+downcomplete='Downloads/Complete' # Location of completed downloads
+downincomplete='Downloads/Incomplete' # Location of incomplete downloads
+tv='TV-Shows' # Location of TV shows
+films='Films' # Location of films
 
 # Create download directories
-mkdir -p "$downcomplete"/Films; mkdir -p "$downcomplete"/TV-Shows; chmod -R 0777 "$downcomplete"
-mkdir -p "$downincomplete"; chmod -R 0777 "$downincomplete"
-mkdir -p "$tv"; chmod -R 0777 "$tv"
-mkdir -p "$films"; chmod -R 0777 "$films"
+mkdir -p /"$basemediapath"/{"$downcomplete"/{"$films","$tv"},"$downincomplete","$films","$tv"}
+chmod 777 "$basemediapath"
+chmod -R 770 "$basemediapath"/*
 
 # Ensure permissions for downloads and media are set... permissively
 cat ./Configs/permissions.sh >/usr/local/bin/permissions.sh
 echo "*/5 * * * * root /usr/local/bin/permissions.sh" >/etc/cron.d/permissions
 sed -i -e "\
-  s|\$tv|""$tv""|g; \
-  s|\$films|""$films""|g; \
-  s|\$downcomplete|""$downcomplete""|g" \
+  s|\$tv|\/""$basemediapath""\/""$tv""|g; \
+  s|\$films|\/""$basemediapath""\/""$films""|g; \
+  s|\$downcomplete|\/""$basemediapath""\/""$downcomplete""|g; \
+  s|\$downcomplete|\/""$basemediapath""\/""$downincomplete""|g" \
 /usr/local/bin/permissions.sh
 
 # Create service users
 users="transmission sonarr radarr jackett flaresolverr"
 for name in $users ; do
     groupadd -r "$name"
-    useradd -m -r -g "$name" -d /var/lib/"$name" "$name"
+    useradd -m -r -g "$name" -d /var/lib/"$name" -s /usr/sbin/nologin "$name"
     chown -R "$name":"$name" /var/lib/"$name"
     usermod -a -G transmission "$name"
 done
@@ -47,16 +49,17 @@ firewall-cmd --reload
 # Install & configure nginx with certbot certs
 apt-get -y install nginx certbot
 mkdir -p /usr/share/nginx/html/.well-known
-chmod 0755 /usr/share/nginx/html/.well-known/
-mkdir -p /etc/nginx/sites
+rm /etc/nginx/sites-enabled/default
+chmod 0750 /usr/share/nginx/html/.well-known/
 cat ./Configs/nginx.conf >/etc/nginx/nginx.conf
-cat ./Configs/pre-certbot.conf >/etc/nginx/sites/mediacentre.conf
-sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/mediacentre.conf
+cat ./Configs/pre-certbot.conf >/etc/nginx/sites-available/mediacentre.conf
+sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites-available/mediacentre.conf
 useradd -r nginx
 systemctl enable nginx --now
 certbot certonly --agree-tos --register-unsafely-without-email --webroot -w /usr/share/nginx/html -d "$domain"
-cat ./Configs/post-certbot.conf >/etc/nginx/sites/mediacentre.conf
-sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites/mediacentre.conf
+cat ./Configs/post-certbot.conf >/etc/nginx/sites-available/mediacentre.conf
+sed -i -e "s/\$domain/""$domain""/g" /etc/nginx/sites-available/mediacentre.conf
+ln -sf /etc/nginx/sites-available/mediacentre.conf /etc/nginx/sites-enabled/mediacentre.conf
 cat ./Configs/certbot-auto >/usr/local/bin/certbot-auto
 echo "@daily root /usr/local/bin/certbot-auto >/dev/null 2>&1" >/etc/cron.d/certbot
 
@@ -68,11 +71,12 @@ apt-get -y install transmission-daemon rar unrar
 mkdir -p /var/lib/transmission/.config/transmission-daemon/
 cat ./Configs/settings.json >/var/lib/transmission/.config/transmission-daemon/settings.json
 sed -i -e "\
-  s|\$downcompletesed|""$downcomplete""|g; \
-  s|\$downincompletesed|""$downincomplete""|g; \
-  s|\$transmissionpass|""$transmissionpass""|g" \
+  s|\$downcomplete|\/""$basemediapath""\/""$downcomplete""|g; \
+  s|\$downincomplete|\/""$basemediapath""\/""$downincomplete""|g; \
+  s|\$transmissionpass|""$transmissionpass""|g; \
+  s|\$transmissionwhitelist|""$transmissionwhitelist""|g" \
 /var/lib/transmission/.config/transmission-daemon/settings.json
-chown -R transmission:transmission /var/lib/transmission/
+chown -R transmission:transmission /var/lib/transmission/ /Media/Downloads
 cat ./Configs/download-unrar.sh >/usr/local/bin/download-unrar.sh
 mkdir -p /etc/systemd/system/transmission-daemon.service.d
 echo -e "[Service]\nUser=transmission" >/etc/systemd/system/transmission-daemon.service.d/run-as-user.conf
@@ -81,8 +85,8 @@ echo -e "[Service]\nUser=transmission" >/etc/systemd/system/transmission-daemon.
 apt-get -y install sendmail
 cat ./Configs/download-cleanup.sh >/usr/local/bin/download-cleanup.sh
 sed -i -e "\
-  s|transmissionpasssed|""$transmissionpass""|g; \
-  s|downloadssed|""$downcomplete""|g" \
+  s|transmissionpass-sed|\/""$basemediapath""\/""$transmissionpass""|g; \
+  s|downloads-sed|\/""$basemediapath""\/""$downcomplete""|g" \
 /usr/local/bin/download-cleanup.sh
 echo "@daily root /usr/local/bin/download-cleanup.sh >/dev/null 2>&1" >/etc/cron.d/download-cleanup
 
@@ -91,6 +95,7 @@ apt-get -y install mono-devel mediainfo sqlite3
 
 # Install Plex
 su $user -P -c 'bash -c "$(wget -qO - https://raw.githubusercontent.com/mrworf/plexupdate/master/extras/installer.sh)"'
+usermod -a -G sonarr,radarr plex
 
 # Install & configure sonarr
 apt-get -y install software-properties-common
@@ -99,6 +104,7 @@ apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 2009837CBFFD68
 echo "deb https://apt.sonarr.tv/ubuntu focal main" | sudo tee /etc/apt/sources.list.d/sonarr.list
 apt-get update && apt-get install sonarr
 sed -i -e "s/<UrlBase>.*/<UrlBase>\/sonarr<\/UrlBase>/g" /var/lib/sonarr/config.xml
+chown -R sonarr:sonarr /var/lib/sonarr /"$basemediapath"/"$tv"
 
 # Install and configure radarr
 ( cd /tmp || return
@@ -108,7 +114,7 @@ mv /opt/Radarr /opt/radarr
 cat ./Configs/radarr.service >/etc/systemd/system/radarr.service
 mkdir -p /var/lib/radarr/.config/Radarr
 echo -e "<Config>\n  <UrlBase>/radarr</UrlBase>\n</Config>" >/var/lib/radarr/.config/Radarr/config.xml
-chown -R radarr:radarr /opt/radarr /var/lib/radarr
+chown -R radarr:radarr /opt/radarr /var/lib/radarr /"$basemediapath"/"$films"
 
 # Install & configure jackett
 ( cd /tmp || return
