@@ -40,7 +40,12 @@ echo "DNS=1.1.1.1 8.8.8.8 1.0.0.1 8.8.4.4" >> /etc/systemd/resolved.conf
 systemctl restart systemd-resolved
 
 # Add firewall rules
-ports="80 443 9091 32400 55369" # port 9091 only if a client is to be used to access transmission
+# 80     http
+# 443    https
+# 9091   transmission rpc (only if a remote client is to be used to access transmission)
+# 32400  plex
+# 55369  transmission
+ports="80 443 9091 32400 55369"
 for port in $ports; do
     firewall-cmd --permanent --zone=drop --add-port="$port"/tcp
 done
