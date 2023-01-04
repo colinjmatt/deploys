@@ -53,7 +53,9 @@ $(cd "$downloads"/TV-Shows || exit; find -- * -maxdepth 0 | sed "s/^/'/;s/$/'/")
 done
 
 # Active downloads counted
-downloadsactive=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | grep 'Idle\|Seeding\|Verifying\|Stopped\|Error' | sed -re 's,\s+, ,g' | cut -d ' ' -f 11- | sed "s/^/'/;s/$/'/")
+downloadsactive=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | head -n -1 | tail -n +2 | awk '$9 != "Finished" {print $0}' | awk -F '  +' '{print $10}' | sed "s/^/'/;s/$/'/")
+# Old one in case new one breaks something
+# downloadsactive=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l | grep 'Idle\|Seeding\|Verifying\|Stopped\|Error' | sed -re 's,\s+, ,g' | cut -d ' ' -f 11- | sed "s/^/'/;s/$/'/")
 
 # Any counted downloads that aren't active and can therefore be deleted
 downloadstodelete=$(echo "$downloadstotal" | grep -Fxv "$downloadsactive" | tr '\n' ' ')
