@@ -140,11 +140,14 @@ cat ./Configs/jackett-update.sh >/usr/local/bin/jackett-update.sh
 echo "@weekly root /usr/local/bin/jackett-update.sh >/dev/null 2>&1" >/etc/cron.d/jackett-update
 
 # Install flaresolverr
+# These dependencies required once a precompiled release for v3 is available
+# apt-get -y install chromium-browser xvfb python3-pip
+
 apt-get -y install firefox libgtk-3-0 libasound2 libx11-xcb1
 ( cd /tmp || return
 curl -s https://api.github.com/repos/FlareSolverr/FlareSolverr/releases | grep "browser_download_url.*flaresolverr-.*-linux-x64.zip" | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
 unzip flaresolverr-*-linux-x64.zip -d /opt/ )
-cp /opt/flaresolverr/flaresolverr.service /etc/systemd/system/
+cp ./Configs/flaresolverr.service /etc/systemd/system/
 chown -R flaresolverr:flaresolverr /opt/flaresolverr /var/lib/flaresolverr
 
 # Everything in /usr/local/bin made to be executable
