@@ -88,7 +88,8 @@ sed -i -e " \
   s/proto\ .*/proto\ udp4/g; \
   s/dev\ .*/dev\ tun1/g; \
   s/10.8.0/10.8.1/g; \
-  s/explicit-exit-notify .*/explicit-exit-notify\ 1/g " \
+  s/explicit-exit-notify .*/explicit-exit-notify\ 1/g; \
+  s/openvpn-tcpserver.log/openvpn-udpserver.log/g" \
 /etc/openvpn/server/udpserver.conf
 
 # Client .ovpn profile
