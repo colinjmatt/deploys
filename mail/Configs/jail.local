@@ -21,7 +21,7 @@ fail2ban_agent       = Fail2Ban/%(fail2ban_version)s
 filter               = %(__name__)s[mode=%(mode)s]
 findtime             = 86400
 ignoreself           = true
-ignoreip             = 127.0.0.1/8 62.30.61.123
+ignoreip             = 127.0.0.1/8
 ignorecommand        =
 logencoding          = auto
 maxretry             = 3
