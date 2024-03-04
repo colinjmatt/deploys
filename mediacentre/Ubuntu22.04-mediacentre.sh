@@ -106,6 +106,11 @@ apt-get -y install mono-devel mediainfo sqlite3
 su $user -P -c 'bash -c "$(wget -qO - https://raw.githubusercontent.com/mrworf/plexupdate/master/extras/installer.sh)"'
 usermod -a -G sonarr,radarr plex
 
+# SWITCHING TO JELLYFIN MAYBE #
+# Install Jellyfin
+curl https://repo.jellyfin.org/install-debuntu.sh | bash
+usermod -a -G sonarr,radarr jellyfin
+
 # Install & configure sonarr
 apt-get -y install software-properties-common
 # New key add script needed, but this still works for now
@@ -150,6 +155,12 @@ unzip flaresolverr-*-linux-x64.zip -d /opt/ )
 cp ./Configs/flaresolverr.service /etc/systemd/system/
 chown -R flaresolverr:flaresolverr /opt/flaresolverr /var/lib/flaresolverr
 
+# Install and configure fail2ban
+apt-get -y install fail2ban
+cat ./Configs/fail2ban.local >/etc/fail2ban/fail2ban.local
+cat ./Configs/jail.local >/etc/fail2ban/jail.local
+cat ./Configs/jellyfin.conf >/etc/fail2ban/fail2ban.d/jellyfin.conf
+
 # Everything in /usr/local/bin made to be executable
 chmod +x /usr/local/bin/*
 
@@ -160,6 +171,7 @@ systemctl enable  transmission-daemon \
                   sonarr \
                   radarr \
                   jackett \
+                  jellyfin \
                   flaresolverr --now
 
 printf "Setup complete.\n"
