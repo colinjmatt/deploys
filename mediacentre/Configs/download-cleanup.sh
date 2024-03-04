@@ -7,6 +7,11 @@ downloads='downloads-sed'
 # Time in days to seed for
 time=$((86400*21))
 
+# Check if transmission is running. If not, exit so that this script doesn't accidentally remove all downloads
+if ! systemctl is-active --quiet transmission-daemon; then 
+  exit 1
+fi
+
 # Remove and delete any torrents that have seeded longer than $time
 torrentlist=$(transmission-remote -n "$transmissionuser":"$transmissionpass" -l \
   | sed -e '1d' -e '$d' \
