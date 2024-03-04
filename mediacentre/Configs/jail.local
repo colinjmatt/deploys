@@ -1,0 +1,104 @@
+[INCLUDES]
+before = paths-debian.conf
+
+[DEFAULT]
+action               = %(action_)s
+backend              = auto
+banaction            = iptables-multiport
+banaction_allports   = iptables-allports
+bantime              = 1mo
+bantime.increment    = true
+bantime.rndtime      = 1d
+bantime.maxtime      = 1y
+bantime.factor       = 1
+bantime.formula      = ban.Time * math.exp(float(ban.Count+1)*banFactor)/math.exp(1*banFactor)
+bantime.multipliers  = 1 5 30 60 300 720 1440 2880
+bantime.overalljails = false
+chain                = <known/chain>
+destemail            = root@localhost
+enabled              = false
+fail2ban_agent       = Fail2Ban/%(fail2ban_version)s
+filter               = %(__name__)s[mode=%(mode)s]
+findtime             = 1d
+ignoreself           = true
+ignoreip             = 127.0.0.1/8
+ignorecommand        =
+logencoding          = auto
+maxmatches           = %(maxretry)s
+maxretry             = 3
+mode                 = normal
+mta                  = sendmail
+port                 = 0:65535
+protocol             = tcp
+sender               = fail2ban@localhost
+usedns               = yes
+
+action_ = %(banaction)s[name=%(__name__)s, port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+
+action_mw = %(banaction)s[name=%(__name__)s, port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+            %(mta)s-whois[name=%(__name__)s, sender="%(sender)s", dest="%(destemail)s", protocol="%(protocol)s", chain="%(chain)s"]
+
+action_mwl = %(banaction)s[name=%(__name__)s, port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+             %(mta)s-whois-lines[name=%(__name__)s, sender="%(sender)s", dest="%(destemail)s", logpath="%(logpath)s", chain="%(chain)s"]
+
+action_xarf = %(banaction)s[name=%(__name__)s, port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+             xarf-login-attack[service=%(__name__)s, sender="%(sender)s", logpath="%(logpath)s", port="%(port)s"]
+
+action_cf_mwl = cloudflare[cfuser="%(cfemail)s", cftoken="%(cfapikey)s"]
+                %(mta)s-whois-lines[name=%(__name__)s, sender="%(sender)s", dest="%(destemail)s", logpath="%(logpath)s", chain="%(chain)s"]
+
+action_blocklist_de  = blocklist_de[email="%(sender)s", service=%(filter)s, apikey="%(blocklist_de_apikey)s", agent="%(fail2ban_agent)s"]
+
+action_badips = badips.py[category="%(__name__)s", banaction="%(banaction)s", agent="%(fail2ban_agent)s"]
+
+action_badips_report = badips[category="%(__name__)s", agent="%(fail2ban_agent)s"]
+
+action_abuseipdb = abuseipdb
+
+
+
+#
+# JAILS
+#
+# SSH
+[sshd]
+port     = ssh
+logpath  = %(sshd_log)s
+backend  = %(sshd_backend)s
+enabled  = true
+
+# HTTP
+[nginx-http-auth]
+port     = http,https
+logpath  = %(nginx_error_log)s
+enabled  = true
+
+[nginx-limit-req]
+port     = http,https
+logpath  = %(nginx_error_log)s
+enabled  = true
+
+[nginx-botsearch]
+port     = http,https
+logpath  = %(nginx_error_log)s
+maxretry = 2
+enabled  = true
+
+[php-url-fopen]
+port     = http,https
+logpath  = %(nginx_access_log)s
+enabled  = true
+
+# Jellyfin
+[jellyfin]
+port = 80,443
+logpath = /var/log/jellyfin/jellyfin*.log
+enabled = true
+filter = jellyfin
+
+# Miscellaneous
+[pam-generic]
+banaction = %(banaction_allports)s
+logpath  = %(syslog_authpriv)s
+backend  = %(syslog_backend)s
+enabled  = true
