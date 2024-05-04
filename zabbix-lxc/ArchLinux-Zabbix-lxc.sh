@@ -48,58 +48,15 @@ echo 'Include=/etc/zabbix/zabbix_agentd.conf.d/*.conf' >>/etc/zabbix/zabbix_agen
 mkdir -p /etc/zabbix/zabbix_agentd.conf.d
 echo 'UserParameter=archlinuxupdates,checkupdates | wc -l' >/etc/zabbix/zabbix_agentd.conf.d/archlinuxupdates.conf
 
-cat <<EOT >/etc/nginx/nginx.conf
-worker_processes auto;
-error_log /var/log/nginx/error.log;
-include /usr/share/nginx/modules/*.conf;
+openssl req -newkey rsa:4096  -x509  -sha512  -days 3650 -nodes -out /etc/ssl/certs/zabbix-self-signed.pem -keyout /etc/ssl/private/zabbix-self-signed.key
 
-events {
-    worker_connections 1024;
-}
-
-http {
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 65;
-    types_hash_max_size 2048;
-
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
-
-    gzip on;
-    gzip_disable "msie6";
-
-    include /etc/nginx/conf.d/*.conf;
-
-    server {
-        listen        80;
-        server_name   zabbix;
-        root /srv/http/zabbix;
-
-        location / {
-            index index.php;
-        }
-
-        location ~ \.php\$ {
-            try_files \$fastcgi_script_name =404;
-            include fastcgi_params;
-            fastcgi_pass			unix:/run/php-fpm/php-fpm.sock;
-            fastcgi_index			index.php;
-            fastcgi_buffers			8 16k;
-            fastcgi_buffer_size		32k;
-            fastcgi_param DOCUMENT_ROOT	\$realpath_root;
-            fastcgi_param SCRIPT_FILENAME	\$realpath_root\$fastcgi_script_name;
-        }
-    }
-}
-EOT
+cat ./Configs/nginx.conf >/etc/nginx/nginx.conf
 
 openssl rand -hex 32 >/etc/zabbix/zabbix_agentd.psk
 chown zabbix-agent:zabbix-agent /etc/zabbix/zabbix_agentd.psk
 chmod 640 /etc/zabbix/zabbix_agentd.psk
 
-cat <<EOT >/etc/zabbix/zabbix_agentd.conf
+cat <<EOT >>/etc/zabbix/zabbix_agentd.conf
 TLSConnect=psk
 TLSAccept=psk
 TLSPSKFile=/etc/zabbix/zabbix_agentd.psk
