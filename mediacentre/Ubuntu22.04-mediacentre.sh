@@ -2,7 +2,6 @@
 # Media server deployment using Ubuntu 22.04
 
 domain="example.com" # FQDN of the server
-user="user1" # Name of non-root user to install Plex as (usually the user you will ssh with)
 transmissionpass='password' # Password for transmission rpc (needs to be single-quoted)
 transmissionwhitelist='example.com' # Address to whitelist
 basemediapath='Media' # This MUST match all other locations below
@@ -43,9 +42,8 @@ systemctl restart systemd-resolved
 # 80     http
 # 443    https
 # 9091   transmission rpc (only if a remote client is to be used to access transmission)
-# 32400  plex
 # 55369  transmission
-ports="80 443 9091 32400 55369"
+ports="80 443 9091 55369"
 for port in $ports; do
     firewall-cmd --permanent --zone=drop --add-port="$port"/tcp
 done
@@ -99,31 +97,23 @@ sed -i -e "\
 /usr/local/bin/download-cleanup.sh
 echo "@daily root /usr/local/bin/download-cleanup.sh >/dev/null 2>&1" >/etc/cron.d/download-cleanup
 
-# Get required packages for Sonarr, Radarr and Jackett
-apt-get -y install mono-devel mediainfo sqlite3
+# Get required packages for Sonarr, Radarr, Jackett and flaresolverr
+apt-get -y install mono-devel mediainfo sqlite3 software-properties-common libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+                   libdrm-dev libxcomposite-dev libxdamage-dev libxrandr-dev libgbm-dev libxkbcommon-dev libasound2 xvfb
 
-# Install Plex
-su $user -P -c 'bash -c "$(wget -qO - https://raw.githubusercontent.com/mrworf/plexupdate/master/extras/installer.sh)"'
-usermod -a -G sonarr,radarr plex
-
-# SWITCHING TO JELLYFIN MAYBE #
 # Install Jellyfin
 curl https://repo.jellyfin.org/install-debuntu.sh | bash
 usermod -a -G sonarr,radarr jellyfin
 
 # Install & configure sonarr
-apt-get -y install software-properties-common
-# New key add script needed, but this still works for now
-apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 2009837CBFFD68F45BC180471F4F90DE2A9B4BF8
-echo "deb https://apt.sonarr.tv/ubuntu focal main" | sudo tee /etc/apt/sources.list.d/sonarr.list
-apt-get update && apt-get install sonarr
+wget --content-disposition -O- 'https://services.sonarr.tv/v1/download/main/latest?version=4&os=linux&arch=x64' | tar zxf - -C /opt/
+mv /opt/Sonarr /opt/sonarr
+cat ./Configs/sonarr.service >/etc/systemd/system/sonarr.service
 sed -i -e "s/<UrlBase>.*/<UrlBase>\/sonarr<\/UrlBase>/g" /var/lib/sonarr/config.xml
 chown -R sonarr:sonarr /var/lib/sonarr /"$basemediapath"/"$tv"
 
 # Install and configure radarr
-( cd /tmp || return
-wget --content-disposition 'http://radarr.servarr.com/v1/update/master/updatefile?os=linux&runtime=netcore&arch=x64'
-tar -zxf Radarr*.linux-core-x64.tar.gz -C /opt/ )
+wget --content-disposition -O- 'http://radarr.servarr.com/v1/update/master/updatefile?os=linux&runtime=netcore&arch=x64'  | tar zxf - -C /opt/
 mv /opt/Radarr /opt/radarr
 cat ./Configs/radarr.service >/etc/systemd/system/radarr.service
 mkdir -p /var/lib/radarr/.config/Radarr
@@ -131,9 +121,7 @@ echo -e "<Config>\n  <UrlBase>/radarr</UrlBase>\n</Config>" >/var/lib/radarr/.co
 chown -R radarr:radarr /opt/radarr /var/lib/radarr /"$basemediapath"/"$films"
 
 # Install & configure jackett
-( cd /tmp || return
-curl -s https://api.github.com/repos/Jackett/Jackett/releases | grep "browser_download_url.*Jackett.Binaries.LinuxAMDx64.tar.gz" | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
-tar -zxf Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt/ )
+curl -sSL https://api.github.com/repos/Jackett/Jackett/releases/latest | grep -o 'https://.*\.tar\.gz' | awk 'NR==1' | xargs wget -O - | tar -xz -C /opt/
 mv /opt/Jackett /opt/jackett
 cat ./Configs/jackett.service >/etc/systemd/system/jackett.service
 mkdir -p /var/lib/jackett/.config/Jackett
@@ -145,14 +133,8 @@ cat ./Configs/jackett-update.sh >/usr/local/bin/jackett-update.sh
 echo "@weekly root /usr/local/bin/jackett-update.sh >/dev/null 2>&1" >/etc/cron.d/jackett-update
 
 # Install flaresolverr
-# These dependencies required once a precompiled release for v3 is available
-# apt-get -y install chromium-browser xvfb python3-pip
-
-apt-get -y install firefox libgtk-3-0 libasound2 libx11-xcb1
-( cd /tmp || return
-curl -s https://api.github.com/repos/FlareSolverr/FlareSolverr/releases | grep "browser_download_url.*flaresolverr-.*-linux-x64.zip" | head -1 | cut -d : -f 2,3 | tr -d \" | wget -i-
-unzip flaresolverr-*-linux-x64.zip -d /opt/ )
-cp ./Configs/flaresolverr.service /etc/systemd/system/
+curl -sSL https://api.github.com/repos/FlareSolverr/FlareSolverr/releases | grep -o 'https://.*\.tar\.gz' | awk 'NR==1' | xargs wget -O - | tar -xz -C /opt/
+cat ./Configs/flaresolverr.service >/etc/systemd/system/flaresolverr.service
 chown -R flaresolverr:flaresolverr /opt/flaresolverr /var/lib/flaresolverr
 
 # Install and configure fail2ban
