@@ -2,7 +2,7 @@
 before = paths-debian.conf
 
 [DEFAULT]
-action               = %(action_)s
+action               = %(action_mwl)s
 backend              = auto
 banaction            = iptables-multiport
 banaction_allports   = iptables-allports
@@ -54,8 +54,6 @@ action_badips = badips.py[category="%(__name__)s", banaction="%(banaction)s", ag
 action_badips_report = badips[category="%(__name__)s", agent="%(fail2ban_agent)s"]
 
 action_abuseipdb = abuseipdb
-
-
 
 #
 # JAILS
