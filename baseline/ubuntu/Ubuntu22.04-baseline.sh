@@ -62,7 +62,6 @@ sysctl -p
 
 # Configure .bashrc & .nanorc
 cat ./Configs/root_bashrc >/root/.bashrc
-cat ./Configs/nanorc >/etc/nanorc
 cat ./Configs/user_bashrc >/etc/skel/.bashrc
 for dir in $(ls -d /home/*/); do
   cat ./Configs/user_bashrc >"${dir}"/.bashrc
