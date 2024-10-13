@@ -98,8 +98,8 @@ sed -i -e "\
 echo "@daily root /usr/local/bin/download-cleanup.sh >/dev/null 2>&1" >/etc/cron.d/download-cleanup
 
 # Get required packages for Sonarr, Radarr, Jackett and flaresolverr
-apt-get -y install mono-devel mediainfo sqlite3 software-properties-common libnss3 libatk1.0-0 libatk-bridge2.0-0 \
-                   libdrm-dev libxcomposite-dev libxdamage-dev libxrandr-dev libgbm-dev libxkbcommon-dev libasound2 xvfb
+apt-get -y install mono-devel mediainfo sqlite3 software-properties-common libnss3 libatk1.0-0t64 libatk-bridge2.0-0t64 \
+                   libcups2t64 libdrm-dev libxcomposite-dev libxdamage-dev libxrandr-dev libgbm-dev libxkbcommon-dev libasound2t64 xvfb
 
 # Install Jellyfin
 curl https://repo.jellyfin.org/install-debuntu.sh | bash
