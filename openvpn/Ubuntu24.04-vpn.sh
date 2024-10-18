@@ -3,7 +3,6 @@
 
 hostname="$(cat /etc/hostname)"
 domain="example.com" # FQDN of the server
-dns="1.1.1.1 8.8.8.8 1.0.0.1 8.8.4.4" # List of nameservers to be used
 smtpaddress="smtp.publicmailserver.com" # The mail server used to send client profile emails
 smtpport="587" # Port used to connect to the SMTP server
 smtpuser="user@publicmailserver.com" # User name to authenticate with (usually the email address)
@@ -58,6 +57,8 @@ echo "net.ipv4.ip_forward = 1" >>/etc/sysctl.conf
 echo 1 | tee /proc/sys/net/ipv4/ip_forward
 
 # For DNS
+echo "DNSStubListenerExtra=10.8.0.1" >>/etc/systemd/resolved.conf
+echo "DNSStubListenerExtra=10.8.1.1" >>/etc/systemd/resolved.conf
 firewall-cmd --permanent --zone=trusted --add-interface=tun0
 firewall-cmd --permanent --zone=trusted --add-interface=tun1
 
