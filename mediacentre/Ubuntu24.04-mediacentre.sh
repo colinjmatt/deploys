@@ -34,9 +34,9 @@ for name in $users ; do
     usermod -a -G transmission "$name"
 done
 
-# Use Cloudflare and Google DNS
-echo "DNS=1.1.1.1 8.8.8.8" >> /etc/systemd/resolved.conf
-echo "FallbackDNS=8.8.4.4 1.0.0.1" >> /etc/systemd/resolved.conf
+# Use Cloudflare and Google DNS on systemd-resolved
+echo "DNS=127.0.0.53" >>/etc/systemd/resolved.conf
+echo "FallbackDNS=1.1.1.1 8.8.8.8 1.0.0.1 8.8.4.4" >>/etc/systemd/resolved.conf
 systemctl restart systemd-resolved
 
 # Add firewall rules
