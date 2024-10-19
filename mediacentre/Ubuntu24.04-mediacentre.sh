@@ -125,7 +125,7 @@ mkdir -p /var/lib/jackett/.config/Jackett
 echo -e "{\n  \"BasePathOverride\": \"/jackett\"\n}" >/var/lib/jackett/.config/Jackett/ServerConfig.json
 chown -R jackett:jackett /opt/jackett /var/lib/jackett
 
-# Jackett updater
+# jackett updater
 cat ./Configs/jackett-update.sh >/usr/local/bin/jackett-update.sh
 echo "@weekly root /usr/local/bin/jackett-update.sh >/dev/null 2>&1" >/etc/cron.d/jackett-update
 
@@ -133,6 +133,10 @@ echo "@weekly root /usr/local/bin/jackett-update.sh >/dev/null 2>&1" >/etc/cron.
 curl -sSL https://api.github.com/repos/FlareSolverr/FlareSolverr/releases | grep -o 'https://.*\.tar\.gz' | awk 'NR==1' | xargs wget -O - | tar -xz -C /opt/
 cat ./Configs/flaresolverr.service >/etc/systemd/system/flaresolverr.service
 chown -R flaresolverr:flaresolverr /opt/flaresolverr /var/lib/flaresolverr
+
+# flaresolverr updater
+cat ./Configs/flaresolverr-update.sh >/usr/local/bin/flaresolverr-update.sh
+echo "@weekly root /usr/local/bin/flaresolverr-update.sh >/dev/null 2>&1" >/etc/cron.d/flaresolverr-update
 
 # Install and configure fail2ban
 apt-get -y install fail2ban
