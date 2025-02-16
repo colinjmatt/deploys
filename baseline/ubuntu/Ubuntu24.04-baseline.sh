@@ -16,7 +16,7 @@ sudoers="user1 user4"
 timezone="Europe/London"
 
 # Packages needed
-apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade
+apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade && apt-get -y autoremove
 apt-get -y install firewalld curl
 
 # Create 16GB swapfile
@@ -39,27 +39,6 @@ timedatectl set-ntp true
 echo "$hostname" > /etc/hostname
 hostname $hostname
 
-# Configure SSH
-cat ./Configs/sshd_config >/etc/ssh/sshd_config
-sed -i -e "s/\$sshusers/""$sshusers""/g" /etc/ssh/sshd_config
-systemctl reload sshd
-
-# Configure SSH firewall rules
-systemctl start firewalld
-sed -i -e "s/AllowZoneDrifting=.*/AllowZoneDrifting=no/g" /etc/firewalld/firewalld.conf
-firewall-cmd --permanent --zone=drop --change-interface=eth0
-firewall-cmd --permanent --zone=drop --add-rich-rule="
-  rule family=\"ipv4\"
-  source address=\"$sship\"
-  port protocol=\"tcp\"
-  port=\"22\"
-  accept"
-firewall-cmd --reload
-
-# Disable IPv6
-echo -e 'net.ipv6.conf.all.disable_ipv6=1\nnet.ipv6.conf.default.disable_ipv6=1\nnet.ipv6.conf.lo.disable_ipv6=1' >/etc/sysctl.d/10-ipv6.conf
-sysctl -p
-
 # Configure .bashrc & .nanorc
 cat ./Configs/root_bashrc >/root/.bashrc
 cat ./Configs/user_bashrc >/etc/skel/.bashrc
@@ -78,3 +57,27 @@ done
 for name in $sudoers ; do
   echo "$name ALL=(ALL) ALL" >/etc/sudoers.d/"$name"
 done
+
+# Configure SSH
+cat ./Configs/sshd_config >/etc/ssh/sshd_config
+sed -i -e "s/\$sshusers/""$sshusers""/g" /etc/ssh/sshd_config
+
+for name in $sshusers ; do
+  mkdir /home/"$name"/.ssh
+  cp /root/.ssh/authorized_keys /home/"$name"/.ssh/
+  chown -R "$name":"$name" /home/"$name"/.ssh/
+done
+
+systemctl reload ssh
+
+# Configure SSH firewall rules
+systemctl start firewalld
+sed -i -e "s/AllowZoneDrifting=.*/AllowZoneDrifting=no/g" /etc/firewalld/firewalld.conf
+firewall-cmd --permanent --zone=drop --change-interface=eth0
+firewall-cmd --permanent --zone=drop --add-rich-rule="
+  rule family=\"ipv4\"
+  source address=\"$sship\"
+  port protocol=\"tcp\"
+  port=\"22\"
+  accept"
+firewall-cmd --reload
