@@ -24,4 +24,4 @@ if [[ "$iprestrict" = "yes" ]]; then
   echo '@reboot root PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\" /usr/local/bin/ssh-allowed.sh >/dev/null 2>&1' >/etc/cron.d/ssh-allowed-reboot
 fi
 
-systemctl restart sshd
+systemctl restart ssh
