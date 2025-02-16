@@ -1,5 +1,5 @@
 #!/bin/bash
-# Media server deployment using Ubuntu 22.04
+# Media server deployment using Ubuntu 24.04
 
 domain="example.com" # FQDN of the server
 transmissionpass='password' # Password for transmission rpc (needs to be single-quoted)
