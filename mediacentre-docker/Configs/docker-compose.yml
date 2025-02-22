@@ -16,9 +16,9 @@ services:
     image: jellyfin/jellyfin:latest
     container_name: jellyfin
     environment:
-      - TZ=Europe/London
       - PUID=1000
       - PGID=1000
+      - TZ=Europe/London
     volumes:
       - ./jellyfin:/config
       - /mnt/media:/media
@@ -72,9 +72,9 @@ services:
     image: lscr.io/linuxserver/jackett:latest
     container_name: jackett
     environment:
-      - TZ=Europe/London
       - PUID=1000
       - PGID=1000
+      - TZ=Europe/London
       - AUTO_UPDATE=true
       - RUN_OPTS=
     volumes:
@@ -113,6 +113,7 @@ services:
     volumes:
       - /yourpath:/gluetun
     environment:
+      - TZ=Europe/London
       # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
       - VPN_SERVICE_PROVIDER=ivpn
       - VPN_TYPE=wireguard
@@ -123,8 +124,18 @@ services:
       - WIREGUARD_PRIVATE_KEY=${wireguard_private_key}                    
       - WIREGUARD_ADDRESSES=${wireguard_addresses}
       - SERVER_COUNTRIES=${wireguard_server_countries}
-      # Timezone for accurate log times
-      - TZ=Europe/London
       # Server list updater
       # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
       - UPDATER_PERIOD=24h
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=Europe/London
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 3 * * *
+    restart: unless-stopped
