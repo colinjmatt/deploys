@@ -6,8 +6,14 @@ smbuser="user"
 smbpassword="password"
 smburl='example.com/shared'
 
+# Wireguard settings
+wireguard_private_key=""
+wireguard_addresses=""
+wireguard_server_countries=""
+
 domain="example.com"
-transmissionpass="1234"
+transmission_user="user"
+transmission_pass="1234"
 
 # Add Docker repo
 apt-get -y install apt-transport-https
@@ -50,12 +56,13 @@ sed -i -e "s/<UrlBase>.*/<UrlBase>\/sonarr<\/UrlBase>/g" /opt/mediacentre/sonarr
 sed -i -e "s/<UrlBase>.*/<UrlBase>\/radarr<\/UrlBase>/g" /opt/mediacentre/radarr/Radarr/config.xml
 sed -i -e "s/\"BasePathOverride\":.*/\"BasePathOverride\":\ \"\/jackett\",/g" /opt/mediacentre/jackett/Jackett/ServerConfig.json
 sed -i -e " \
-    s|\$transmissionpass|""$transmissionpass""|g \
     s|\"dht-enabled\".*|\"dht-enabled\":\ false,|g \
     s|\"idle-seeding-limit\".*|\"idle-seeding-limit\":\ 28800,|g \
     s|\"idle-seeding-limit-enabled\".*|\"idle-seeding-limit-enabled\":\ true,|g" \
 /opt/mediacentre/transmission/setting.json
-
+echo "transmission_user=$transmission_user" >/opt/mediacentre/.env
+echo "transmission_pass=$transmission_pass" >/opt/mediacentre/.env
+chmod 600 /opt/mediacentre/.env
 
 # Install & configure certbot certs
 apt-get -y install certbot
@@ -65,6 +72,11 @@ chmod +x /usr/local/bin/certbot-auto
 echo "@daily root /usr/local/bin/certbot-auto >/dev/null 2>&1" >/etc/cron.d/certbot
 cat ./Configs/nginx-post-certbot.conf >/opt/mediacentre/nginx/nginx.conf
 sed -i -e "s/\$domain/""$domain""/g" /opt/mediacentre/nginx/nginx.conf
+
+# Configure Gluetun with Wireguard details:
+echo "wireguard_private_key=$wireguard_private_key" >/opt/mediacentre/.env
+echo "wireguard_addresses=$wireguard_addresses" >/opt/mediacentre/.env
+echo "wireguard_server_countries=$wireguard_server_countries" >/opt/mediacentre/.env
 
 # Start Docker again
 ( cd /opt/mediacentre || return
