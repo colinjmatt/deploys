@@ -91,6 +91,8 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
+      - USER=${transmission_user}
+      - PASS=${transmission_pass}
     volumes:
       - ./transmission:/config
       - /mnt/media/downloads:/downloads
@@ -98,7 +100,7 @@ services:
     network_mode: "service:gluetun"
 
   gluetun:
-    image: qmcgaw/gluetun
+    image: qmcgaw/gluetun:latest
     container_name: gluetun
     # line above must be uncommented to allow external containers to connect.
     # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/connect-a-container-to-gluetun.md#external-container-to-gluetun
@@ -118,9 +120,9 @@ services:
       #- OPENVPN_USER=
       #- OPENVPN_PASSWORD=
       # Wireguard:
-      - WIREGUARD_PRIVATE_KEY=MES0hOhMxWZpSnSAzddOkLHBRSDh43MOMkxK8RiXE00=
-      - WIREGUARD_ADDRESSES=172.24.10.229/32
-      - SERVER_COUNTRIES=Netherlands
+      - WIREGUARD_PRIVATE_KEY=${wireguard_private_key}                    
+      - WIREGUARD_ADDRESSES=${wireguard_addresses}
+      - SERVER_COUNTRIES=${wireguard_server_countries}
       # Timezone for accurate log times
       - TZ=Europe/London
       # Server list updater
