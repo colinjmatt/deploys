@@ -137,5 +137,6 @@ services:
     environment:
       - TZ=Europe/London
       - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_SCHEDULE=0 3 * * *
+      - WATCHTOWER_INCLUDE_RESTARTING
+      - WATCHTOWER_SCHEDULE=0 0 3 * * 0
     restart: unless-stopped
