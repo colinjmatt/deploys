@@ -84,21 +84,6 @@ services:
       - 9117:9117
     restart: unless-stopped
 
-  transmission:
-    image: lscr.io/linuxserver/transmission:latest
-    container_name: transmission
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - USER=${transmission_user}
-      - PASS=${transmission_pass}
-    volumes:
-      - ./transmission:/config
-      - /mnt/media/downloads:/downloads
-    restart: unless-stopped
-    network_mode: "service:gluetun"
-
   gluetun:
     image: qmcgaw/gluetun:latest
     container_name: gluetun
@@ -111,7 +96,7 @@ services:
     ports:
       - "0.0.0.0:9091:9091/tcp" # Transmission
     volumes:
-      - /yourpath:/gluetun
+      - ./gluetun:/gluetun
     environment:
       - TZ=Europe/London
       # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
@@ -121,13 +106,31 @@ services:
       #- OPENVPN_USER=
       #- OPENVPN_PASSWORD=
       # Wireguard:
-      - WIREGUARD_PRIVATE_KEY=${wireguard_private_key}                    
+      - WIREGUARD_PRIVATE_KEY=${wireguard_private_key}
       - WIREGUARD_ADDRESSES=${wireguard_addresses}
       - SERVER_COUNTRIES=${wireguard_server_countries}
       # Server list updater
       # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
       - UPDATER_PERIOD=24h
     restart: unless-stopped
+
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: transmission
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - USER=${transmission_user}
+      - PASS=${transmission_pass}
+    volumes:
+      - ./transmission:/config
+      - /mnt/media/downloads:/downloads
+    restart: unless-stopped
+    network_mode: "service:gluetun"
 
   watchtower:
     image: containrrr/watchtower:latest
