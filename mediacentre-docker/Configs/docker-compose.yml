@@ -11,6 +11,14 @@ services:
       - ./nginx/certs/dhparam.pem:/etc/nginx/dhparam.pem:ro
       - ./nginx/html:/etc/nginx/html:ro
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost/ || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - autoheal=true
 
   jellyfin:
     image: jellyfin/jellyfin:latest
@@ -25,6 +33,8 @@ services:
     ports:
       - "8096:8096"
     restart: unless-stopped
+    labels:
+      - autoheal=true
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
@@ -33,6 +43,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
+      - SONARR_API_KEY=${sonarr_api_key}
     ports:
       - "8989:8989"
     volumes:
@@ -40,6 +51,14 @@ services:
       - /mnt/media:/media
       - /mnt/media/downloads:/downloads
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL --max-time 5 -H \"X-Api-Key: $$SONARR_API_KEY\" http://localhost:8989/api/v3/system/status || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - autoheal=true
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -48,6 +67,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
+      - RADARR_API_KEY=${radarr_api_key}
     ports:
       - "7878:7878"
     volumes:
@@ -55,6 +75,14 @@ services:
       - /mnt/media:/media
       - /mnt/media/downloads:/downloads
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL --max-time 5 -H \"X-Api-Key: $$RADARR_API_KEY\" http://localhost:7878/api/v3/system/status || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - autoheal=true
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -67,6 +95,14 @@ services:
     ports:
       - "${PORT:-8191}:8191"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL --max-time 5 http://localhost:8191/health || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - autoheal=true
 
   jackett:
     image: lscr.io/linuxserver/jackett:latest
@@ -83,6 +119,14 @@ services:
     ports:
       - 9117:9117
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:9117/UI/Dashboard || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - autoheal=true
 
   gluetun:
     image: qmcgaw/gluetun:latest
@@ -113,6 +157,8 @@ services:
       # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
       - UPDATER_PERIOD=24h
     restart: unless-stopped
+    labels:
+      - autoheal=true
 
   transmission:
     image: lscr.io/linuxserver/transmission:latest
@@ -131,6 +177,14 @@ services:
       - /mnt/media/downloads:/downloads
     restart: unless-stopped
     network_mode: "service:gluetun"
+    healthcheck:
+      test: ["CMD-SHELL", "transmission-remote --auth $$USER:$$PASS -l >/dev/null 2>&1 || exit 1"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - autoheal=true
 
   watchtower:
     image: containrrr/watchtower:latest
@@ -140,6 +194,20 @@ services:
     environment:
       - TZ=Europe/London
       - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_INCLUDE_RESTARTING
       - WATCHTOWER_SCHEDULE=0 0 3 * * 0
     restart: unless-stopped
+    labels:
+      - autoheal=true
+
+  autoheal:
+    image: willfarrell/autoheal
+    container_name: autoheal
+    environment:
+      - AUTOHEAL_INTERVAL=60
+      - AUTOHEAL_START_PERIOD=60
+      - WEBHOOK_URL="" # Add a webhook if needed
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    network_mode: none
