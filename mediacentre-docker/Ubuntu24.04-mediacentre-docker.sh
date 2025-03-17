@@ -1,19 +1,26 @@
 #!/bin/bash
 # Dockerised media server deployment using Ubuntu 24.04
 
+# Domain name
+domain="example.com"
+
+# Sonarr/Radarr API keys (if known)
+radarr_api_key="abcdefg1234567890abcdefg1234567890a"
+sonarr_api_key="abcdefg1234567890abcdefg1234567890a"
+
 # SMB credentials
 smbuser="user"
 smbpassword="password"
 smburl='example.com/shared'
 
+# Transmission credentials
+transmission_user="user"
+transmission_pass="1234"
+
 # Wireguard settings
 wireguard_private_key=""
 wireguard_addresses=""
 wireguard_server_countries=""
-
-domain="example.com"
-transmission_user="user"
-transmission_pass="1234"
 
 # Add Docker repo
 apt-get -y install apt-transport-https
@@ -60,8 +67,6 @@ sed -i -e " \
     s|\"idle-seeding-limit\".*|\"idle-seeding-limit\":\ 28800,|g \
     s|\"idle-seeding-limit-enabled\".*|\"idle-seeding-limit-enabled\":\ true,|g" \
 /opt/mediacentre/transmission/setting.json
-echo "transmission_user=$transmission_user" >/opt/mediacentre/.env
-echo "transmission_pass=$transmission_pass" >/opt/mediacentre/.env
 chmod 600 /opt/mediacentre/.env
 
 # Install & configure certbot certs
@@ -72,6 +77,14 @@ chmod +x /usr/local/bin/certbot-auto
 echo "@daily root /usr/local/bin/certbot-auto >/dev/null 2>&1" >/etc/cron.d/certbot
 cat ./Configs/nginx-post-certbot.conf >/opt/mediacentre/nginx/nginx.conf
 sed -i -e "s/\$domain/""$domain""/g" /opt/mediacentre/nginx/nginx.conf
+
+# Add API key variables
+echo "radarr_api_key=$radarr_api_key" >/opt/mediacentre/.env
+echo "sonarr_api_key=$sonarr_api_key" >/opt/mediacentre/.env
+
+# Add Transmission credentials
+echo "transmission_user=$transmission_user" >/opt/mediacentre/.env
+echo "transmission_pass=$transmission_pass" >/opt/mediacentre/.env
 
 # Configure Gluetun with Wireguard details:
 echo "wireguard_private_key=$wireguard_private_key" >/opt/mediacentre/.env
