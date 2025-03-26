@@ -1,0 +1,36 @@
+{
+    "content": "{{MentionType}}",
+    "avatar_url": "{{AvatarUrl}}",
+    "username": "{{BotUsername}}",
+    "embeds": [
+        {   
+            "author": {
+                "name": "Authentication Failure • {{{NotificationUsername}}}",
+
+                "url": "{{ServerUrl}}/web/index.html#!/useredit.html?userId={{UserId}}"
+            },
+
+            "thumbnail":{
+                "url": "{{ServerUrl}}/Users/{{UserId}}/Images/Primary"
+            },
+
+            "description": "
+            {{~#if_exist NotificationUsername~}}
+                > Failed login attempt for ``{{{NotificationUsername}}}`` on ``{{{ServerName}}}``\n\n
+            {{~/if_exist~}}
+            
+            {{~#if_exist RemoteAddress~}}
+                **IP Address:** ``{{RemoteAddress}}``\n
+            {{~/if_exist~}}
+
+            {{~#if_exist ServerUrl~}}
+                [**Review Activity**]({{ServerUrl}}/web/index.html#/dashboard/activity)
+            {{~/if_exist~}}
+            ",
+ 
+            "color": "16711680",
+ 
+            "timestamp": "{{Timestamp}}"
+        }
+    ]
+}
