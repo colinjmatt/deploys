@@ -36,98 +36,6 @@ services:
     labels:
       - autoheal=true
 
-  sonarr:
-    image: lscr.io/linuxserver/sonarr:latest
-    container_name: sonarr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - SONARR_API_KEY=${sonarr_api_key}
-    ports:
-      - "8989:8989"
-    volumes:
-      - ./sonarr:/config
-      - /mnt/media:/media
-      - /mnt/media/downloads:/downloads
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsSL --max-time 5 -H \"X-Api-Key: $$SONARR_API_KEY\" http://localhost:8989/api/v3/system/status || exit 1"]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    labels:
-      - autoheal=true
-
-  radarr:
-    image: lscr.io/linuxserver/radarr:latest
-    container_name: radarr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - RADARR_API_KEY=${radarr_api_key}
-    ports:
-      - "7878:7878"
-    volumes:
-      - ./radarr:/config
-      - /mnt/media:/media
-      - /mnt/media/downloads:/downloads
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsSL --max-time 5 -H \"X-Api-Key: $$RADARR_API_KEY\" http://localhost:7878/api/v3/system/status || exit 1"]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    labels:
-      - autoheal=true
-
-  flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    container_name: flaresolverr
-    environment:
-      - TZ=Europe/London
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - LOG_HTML=${LOG_HTML:-false}
-      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
-    ports:
-      - "${PORT:-8191}:8191"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsSL --max-time 5 http://localhost:8191/health || exit 1"]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    labels:
-      - autoheal=true
-
-  jackett:
-    image: lscr.io/linuxserver/jackett:latest
-    container_name: jackett
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - AUTO_UPDATE=true
-      - RUN_OPTS=
-    volumes:
-      - ./jackett:/config
-      - /mnt/media/blackhole:/downloads
-    ports:
-      - 9117:9117
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl --fail http://localhost:9117/UI/Dashboard || exit 1"]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    labels:
-      - autoheal=true
-
   gluetun:
     image: qmcgaw/gluetun:latest
     container_name: gluetun
@@ -180,6 +88,98 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "transmission-remote --auth $$USER:$$PASS -l >/dev/null 2>&1 || exit 1"]
       interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - autoheal=true
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - TZ=Europe/London
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+    ports:
+      - "${PORT:-8191}:8191"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL --max-time 5 http://localhost:8191/health || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - autoheal=true
+
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - AUTO_UPDATE=true
+      - RUN_OPTS=
+    volumes:
+      - ./jackett:/config
+      - /mnt/media/blackhole:/downloads
+    ports:
+      - 9117:9117
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:9117/UI/Dashboard || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - autoheal=true
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - SONARR_API_KEY=${sonarr_api_key}
+    ports:
+      - "8989:8989"
+    volumes:
+      - ./sonarr:/config
+      - /mnt/media:/media
+      - /mnt/media/downloads:/downloads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL --max-time 5 -H \"X-Api-Key: $$SONARR_API_KEY\" http://localhost:8989/api/v3/system/status || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - autoheal=true
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - RADARR_API_KEY=${radarr_api_key}
+    ports:
+      - "7878:7878"
+    volumes:
+      - ./radarr:/config
+      - /mnt/media:/media
+      - /mnt/media/downloads:/downloads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL --max-time 5 -H \"X-Api-Key: $$RADARR_API_KEY\" http://localhost:7878/api/v3/system/status || exit 1"]
+      interval: 1m
       timeout: 10s
       retries: 3
       start_period: 30s
