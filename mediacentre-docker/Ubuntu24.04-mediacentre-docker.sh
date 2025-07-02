@@ -61,12 +61,15 @@ cat ./Configs/download-unrar.sh >/opt/mediacentre/transmission/download-unrar.sh
 chmod +x /opt/mediacentre/transmission/download-unrar.sh
 sed -i -e "s/<UrlBase>.*/<UrlBase>\/sonarr<\/UrlBase>/g" /opt/mediacentre/sonarr/config.xml
 sed -i -e "s/<UrlBase>.*/<UrlBase>\/radarr<\/UrlBase>/g" /opt/mediacentre/radarr/Radarr/config.xml
-sed -i -e "s/\"BasePathOverride\":.*/\"BasePathOverride\":\ \"\/jackett\",/g" /opt/mediacentre/jackett/Jackett/ServerConfig.json
-sed -i -e " \
-    s|\"dht-enabled\".*|\"dht-enabled\":\ false,|g \
-    s|\"idle-seeding-limit\".*|\"idle-seeding-limit\":\ 28800,|g \
-    s|\"idle-seeding-limit-enabled\".*|\"idle-seeding-limit-enabled\":\ true,|g" \
-/opt/mediacentre/transmission/setting.json
+sed -i \
+    -e "s/\"BasePathOverride\":.*/\"BasePathOverride\": \"\/jackett\",/" \
+    -e "s/\"BaseUrlOverride\":.*/\"BaseUrlOverride\": \"https:\/\/$domain\",/" \
+/opt/mediacentre/jackett/Jackett/ServerConfig.json
+sed -i \
+    -e 's|"dht-enabled".*|"dht-enabled": false,|' \
+    -e 's|"idle-seeding-limit".*|"idle-seeding-limit": 28800,|' \
+    -e 's|"idle-seeding-limit-enabled".*|"idle-seeding-limit-enabled": true,|' \
+/opt/mediacentre/transmission/settings.json
 chmod 600 /opt/mediacentre/.env
 
 # Install & configure certbot certs
