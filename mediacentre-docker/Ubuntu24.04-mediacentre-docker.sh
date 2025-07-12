@@ -37,7 +37,7 @@ echo "$smbuser" >/root/.SMBcredentials
 echo "$smbpassword" >>/root/.SMBcredentials
 chmod 400 /root/.SMBcredentials
 mount -t cifs -o rw,vers=3.0,credentials=/root/.SMBcredentials //"$smburl"/backup /mnt/media
-echo "//""$smburl"" /mnt/media cifs credentials=/root/.SMBcredentials,uid=1000,gid=1000,file_mode=0775,dir_mode=0775 0 0" >> /etc/fstab
+echo "//$smburl /mnt/media cifs credentials=/root/.SMBcredentials,uid=1000,gid=1000,file_mode=0775,dir_mode=0775 0 0" >> /etc/fstab
 
 # Setup Nginx
 cat ./Configs/nginx-pre-certbot.conf >/opt/mediacentre/nginx/nginx.conf
