@@ -69,6 +69,8 @@ sed -i \
     -e 's|"dht-enabled".*|"dht-enabled": false,|' \
     -e 's|"idle-seeding-limit".*|"idle-seeding-limit": 28800,|' \
     -e 's|"idle-seeding-limit-enabled".*|"idle-seeding-limit-enabled": true,|' \
+    -e 's|"script-torrent-done-enabled".*|"script-torrent-done-enabled": true,|' \
+    -e 's|"script-torrent-done-filename".*|"script-torrent-done-filename": "/config/download-unrar.sh",|' \
 /opt/mediacentre/transmission/settings.json
 chmod 600 /opt/mediacentre/.env
 
