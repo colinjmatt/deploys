@@ -53,7 +53,7 @@ openssl req -newkey rsa:4096  -x509  -sha512  -days 3650 -nodes -out /etc/ssl/ce
 cat ./Configs/nginx.conf >/etc/nginx/nginx.conf
 
 openssl rand -hex 32 >/etc/zabbix/zabbix_agentd.psk
-chown zabbix-agent:zabbix-agent /etc/zabbix/zabbix_agentd.psk
+chown zabbix:zabbix /etc/zabbix/zabbix_agentd.psk
 chmod 640 /etc/zabbix/zabbix_agentd.psk
 
 cat <<EOT >>/etc/zabbix/zabbix_agentd.conf
