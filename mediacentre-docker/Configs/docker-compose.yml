@@ -187,7 +187,9 @@ services:
       - autoheal=true
 
   watchtower:
-    image: containrrr/watchtower:latest
+    # "Official" watchtower image has issues with newer versions of docker
+    #image: containrrr/watchtower:latest
+    image: nickfedor/watchtower:latest
     container_name: watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
