@@ -14,7 +14,7 @@ smbpassword="password"
 smburl='example.com/shared'
 
 # Transmission credentials
-transmission_user="user"
+transmission_user="transmission"
 transmission_pass="1234"
 
 # Wireguard settings
@@ -73,6 +73,11 @@ sed -i \
     -e 's|"script-torrent-done-filename".*|"script-torrent-done-filename": "/config/download-unrar.sh",|' \
 /opt/mediacentre/transmission/settings.json
 chmod 600 /opt/mediacentre/.env
+
+# Setup Transmission cleanup script
+cat ./Configs/download-cleanup.sh >/opt/mediacentre/transmission/download-cleanup.sh
+chmod +x /opt/mediacentre/transmission/download-cleanup.sh
+echo '0 6 * * * root PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" docker exec transmission /config/download-cleanup.sh >/dev/null 2>&1' >/etc/cron.d/download-cleanup
 
 # Install & configure certbot certs
 apt-get -y install certbot
