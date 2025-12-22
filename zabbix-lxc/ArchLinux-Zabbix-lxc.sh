@@ -63,6 +63,8 @@ TLSPSKFile=/etc/zabbix/zabbix_agentd.psk
 TLSPSKIdentity=PSK001
 EOT
 
+echo "SystemMaxUse=50M" >>/etc/systemd/journald.conf
+
 systemctl enable \
   postgresql \
   zabbix-server-pgsql \
